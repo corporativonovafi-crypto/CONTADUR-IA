@@ -1,1 +1,20 @@
-
+{
+  "rewrites": [
+    {
+      "source": "/analisis-xml",
+      "destination": "https://mi-plataforma-fiscal.vercel.app/analisis-xml"
+    },
+    {
+      "source": "/analizador-xml",
+      "destination": "https://analizador-de-xml.vercel.app/"
+    },
+    {
+      "source": "/estimador-resico",
+      "destination": "https://estimador-de-impuestos.vercel.app/estimador-resico.html"
+    },
+    {
+      "source": "/extractor-nomina",
+      "destination": "https://extractor-nomina-cfdi.vercel.app/"
+    }
+  ]
+}
