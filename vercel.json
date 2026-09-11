@@ -1,28 +1,16 @@
 {
   "rewrites": [
     {
+      "source": "/",
+      "destination": "https://mi-plataforma-fiscal.vercel.app/analisis-xml"
+    },
+    {
       "source": "/_next/:path*",
       "destination": "https://mi-plataforma-fiscal.vercel.app/_next/:path*"
     },
     {
       "source": "/static/:path*",
       "destination": "https://mi-plataforma-fiscal.vercel.app/static/:path*"
-    },
-    {
-      "source": "/:path*.css",
-      "destination": "https://mi-plataforma-fiscal.vercel.app/:path*.css"
-    },
-    {
-      "source": "/:path*.js",
-      "destination": "https://mi-plataforma-fiscal.vercel.app/:path*.js"
-    },
-    {
-      "source": "/:path*.png",
-      "destination": "https://mi-plataforma-fiscal.vercel.app/:path*.png"
-    },
-    {
-      "source": "/:path*.svg",
-      "destination": "https://mi-plataforma-fiscal.vercel.app/:path*.svg"
     },
     {
       "source": "/:path*",
