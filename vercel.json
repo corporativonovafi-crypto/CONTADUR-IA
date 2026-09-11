@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/",
+      "destination": "https://mi-plataforma-fiscal.vercel.app/analisis-xml"
+    },
+    {
       "source": "/analisis-xml",
       "destination": "https://mi-plataforma-fiscal.vercel.app/analisis-xml"
     },
