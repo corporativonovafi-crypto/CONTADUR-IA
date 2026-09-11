@@ -1,24 +1,32 @@
 {
   "rewrites": [
     {
-      "source": "/",
-      "destination": "https://mi-plataforma-fiscal.vercel.app/analisis-xml"
+      "source": "/_next/:path*",
+      "destination": "https://mi-plataforma-fiscal.vercel.app/_next/:path*"
     },
     {
-      "source": "/analisis-xml",
-      "destination": "https://mi-plataforma-fiscal.vercel.app/analisis-xml"
+      "source": "/static/:path*",
+      "destination": "https://mi-plataforma-fiscal.vercel.app/static/:path*"
     },
     {
-      "source": "/analizador-xml",
-      "destination": "https://analizador-de-xml.vercel.app/"
+      "source": "/:path*.css",
+      "destination": "https://mi-plataforma-fiscal.vercel.app/:path*.css"
     },
     {
-      "source": "/estimador-resico",
-      "destination": "https://estimador-de-impuestos.vercel.app/estimador-resico.html"
+      "source": "/:path*.js",
+      "destination": "https://mi-plataforma-fiscal.vercel.app/:path*.js"
     },
     {
-      "source": "/extractor-nomina",
-      "destination": "https://extractor-nomina-cfdi.vercel.app/"
+      "source": "/:path*.png",
+      "destination": "https://mi-plataforma-fiscal.vercel.app/:path*.png"
+    },
+    {
+      "source": "/:path*.svg",
+      "destination": "https://mi-plataforma-fiscal.vercel.app/:path*.svg"
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://mi-plataforma-fiscal.vercel.app/:path*"
     }
   ]
 }
