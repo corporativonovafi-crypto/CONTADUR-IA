@@ -6,7 +6,63 @@
 <title>Mis Herramientas Fiscales</title>
 <style>
   * { box-sizing: border-box; }
- <style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    display: flex;
+    justify-content: center;
+    padding: 3rem 1rem;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    color: #f1f5f9;
+  }
+  h1 {
+    font-size: 1.4rem;
+    margin-bottom: 0.25rem;
+  }
+  p.subtitle {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+  }
+  a.link-card {
+    display: block;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.85rem;
+    text-decoration: none;
+    color: #f1f5f9;
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  a.link-card:hover {
+    background: #273449;
+    border-color: #475569;
+    transform: translateY(-2px);
+  }
+  a.link-card .name {
+    font-weight: 600;
+    font-size: 1rem;
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+  a.link-card .desc {
+    font-size: 0.82rem;
+    color: #94a3b8;
+  }
+  footer {
+    margin-top: 2rem;
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+
+  /* --- Widget de chat --- */
   #chat-fab {
     position: fixed;
     bottom: 1.5rem;
@@ -76,116 +132,6 @@
     cursor: pointer;
   }
 </style>
-
-<button id="chat-fab" onclick="document.getElementById('chat-box').classList.toggle('open')">💬</button>
-
-<div id="chat-box">
-  <div id="chat-header">Asistente fiscal</div>
-  <div id="chat-messages">
-    <div class="msg bot">Hola 👋 ¿En qué herramienta puedo ayudarte hoy?</div>
-  </div>
-  <div id="chat-input-row">
-    <input id="chat-input" type="text" placeholder="Escribe tu pregunta..." />
-    <button id="chat-send">➤</button>
-  </div>
-</div>
-
-<script>
-  const messagesEl = document.getElementById('chat-messages');
-  const inputEl = document.getElementById('chat-input');
-  const sendBtn = document.getElementById('chat-send');
-
-  function addMessage(text, who) {
-    const div = document.createElement('div');
-    div.className = 'msg ' + who;
-    div.textContent = text;
-    messagesEl.appendChild(div);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-  }
-
-  async function sendMessage() {
-    const text = inputEl.value.trim();
-    if (!text) return;
-    addMessage(text, 'user');
-    inputEl.value = '';
-    addMessage('Escribiendo...', 'bot');
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
-      });
-      const data = await res.json();
-      messagesEl.removeChild(messagesEl.lastChild);
-      addMessage(data.reply || 'Sin respuesta.', 'bot');
-    } catch (err) {
-      messagesEl.removeChild(messagesEl.lastChild);
-      addMessage('Error al conectar con el asistente.', 'bot');
-    }
-  }
-
-  sendBtn.addEventListener('click', sendMessage);
-  inputEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') sendMessage();
-  });
-</script>
- body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-    display: flex;
-    justify-content: center;
-    padding: 3rem 1rem;
-  }
-  .wrap {
-    width: 100%;
-    max-width: 420px;
-    text-align: center;
-    color: #f1f5f9;
-  }
-  h1 {
-    font-size: 1.4rem;
-    margin-bottom: 0.25rem;
-  }
-  p.subtitle {
-    color: #94a3b8;
-    font-size: 0.9rem;
-    margin-bottom: 2rem;
-  }
-  a.link-card {
-    display: block;
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 14px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 0.85rem;
-    text-decoration: none;
-    color: #f1f5f9;
-    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-  }
-  a.link-card:hover {
-    background: #273449;
-    border-color: #475569;
-    transform: translateY(-2px);
-  }
-  a.link-card .name {
-    font-weight: 600;
-    font-size: 1rem;
-    display: block;
-    margin-bottom: 0.2rem;
-  }
-  a.link-card .desc {
-    font-size: 0.82rem;
-    color: #94a3b8;
-  }
-  footer {
-    margin-top: 2rem;
-    font-size: 0.75rem;
-    color: #64748b;
-  }
-</style>
 </head>
 <body>
   <div class="wrap">
@@ -214,5 +160,59 @@
 
     <footer>Eliezer Doño Andrade · Contador Corporativo</footer>
   </div>
+
+  <button id="chat-fab" onclick="document.getElementById('chat-box').classList.toggle('open')">💬</button>
+
+  <div id="chat-box">
+    <div id="chat-header">Asistente fiscal</div>
+    <div id="chat-messages">
+      <div class="msg bot">Hola 👋 ¿En qué herramienta puedo ayudarte hoy?</div>
+    </div>
+    <div id="chat-input-row">
+      <input id="chat-input" type="text" placeholder="Escribe tu pregunta..." />
+      <button id="chat-send">➤</button>
+    </div>
+  </div>
+
+  <script>
+    const messagesEl = document.getElementById('chat-messages');
+    const inputEl = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('chat-send');
+
+    function addMessage(text, who) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + who;
+      div.textContent = text;
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+      addMessage(text, 'user');
+      inputEl.value = '';
+      addMessage('Escribiendo...', 'bot');
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text })
+        });
+        const data = await res.json();
+        messagesEl.removeChild(messagesEl.lastChild);
+        addMessage(data.reply || 'Sin respuesta.', 'bot');
+      } catch (err) {
+        messagesEl.removeChild(messagesEl.lastChild);
+        addMessage('Error al conectar con el asistente.', 'bot');
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
 </body>
 </html>
