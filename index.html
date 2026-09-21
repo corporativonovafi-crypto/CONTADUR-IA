@@ -21,15 +21,8 @@
     text-align: center;
     color: #f1f5f9;
   }
-  h1 {
-    font-size: 1.4rem;
-    margin-bottom: 0.25rem;
-  }
-  p.subtitle {
-    color: #94a3b8;
-    font-size: 0.9rem;
-    margin-bottom: 2rem;
-  }
+  h1 { font-size: 1.4rem; margin-bottom: 0.25rem; }
+  p.subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; }
   a.link-card {
     display: block;
     background: #1e293b;
@@ -41,95 +34,99 @@
     color: #f1f5f9;
     transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
   }
-  a.link-card:hover {
-    background: #273449;
-    border-color: #475569;
-    transform: translateY(-2px);
-  }
-  a.link-card .name {
-    font-weight: 600;
-    font-size: 1rem;
-    display: block;
-    margin-bottom: 0.2rem;
-  }
-  a.link-card .desc {
-    font-size: 0.82rem;
-    color: #94a3b8;
-  }
-  footer {
-    margin-top: 2rem;
-    font-size: 0.75rem;
-    color: #64748b;
-  }
+  a.link-card:hover { background: #273449; border-color: #475569; transform: translateY(-2px); }
+  a.link-card .name { font-weight: 600; font-size: 1rem; display: block; margin-bottom: 0.2rem; }
+  a.link-card .desc { font-size: 0.82rem; color: #94a3b8; }
+  footer { margin-top: 2rem; font-size: 0.75rem; color: #64748b; }
 
-  /* --- Widget de chat --- */
-  #chat-fab {
+  /* --- Chat widget --- */
+  #chat-toggle {
     position: fixed;
     bottom: 1.5rem;
     right: 1.5rem;
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: #3b82f6;
+    background: #6366f1;
     color: white;
     border: none;
     font-size: 1.4rem;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
     z-index: 1000;
   }
-  #chat-box {
-    display: none;
+  #chat-panel {
     position: fixed;
     bottom: 5.5rem;
     right: 1.5rem;
     width: 320px;
-    max-width: 90vw;
+    max-width: calc(100vw - 2rem);
     height: 420px;
-    background: #1e293b;
+    background: #0f172a;
     border: 1px solid #334155;
     border-radius: 14px;
+    display: none;
     flex-direction: column;
     overflow: hidden;
     z-index: 1000;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.45);
   }
-  #chat-box.open { display: flex; }
+  #chat-panel.open { display: flex; }
   #chat-header {
-    padding: 0.75rem 1rem;
-    background: #0f172a;
+    background: #1e293b;
     color: #f1f5f9;
-    font-weight: 600;
+    padding: 0.75rem 1rem;
     font-size: 0.9rem;
+    font-weight: 600;
+    border-bottom: 1px solid #334155;
   }
   #chat-messages {
     flex: 1;
     overflow-y: auto;
     padding: 0.75rem;
-    font-size: 0.85rem;
-    color: #f1f5f9;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
   }
-  #chat-messages .msg { margin-bottom: 0.6rem; line-height: 1.4; }
-  #chat-messages .user { color: #93c5fd; }
-  #chat-messages .bot { color: #f1f5f9; }
+  .msg {
+    max-width: 85%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    line-height: 1.35;
+    white-space: pre-wrap;
+  }
+  .msg.user {
+    align-self: flex-end;
+    background: #6366f1;
+    color: white;
+  }
+  .msg.bot {
+    align-self: flex-start;
+    background: #1e293b;
+    color: #f1f5f9;
+    border: 1px solid #334155;
+  }
   #chat-input-row {
     display: flex;
     border-top: 1px solid #334155;
   }
   #chat-input {
     flex: 1;
-    padding: 0.6rem;
-    background: #0f172a;
     border: none;
+    background: #1e293b;
     color: #f1f5f9;
+    padding: 0.65rem 0.75rem;
     font-size: 0.85rem;
+    outline: none;
   }
-  #chat-input:focus { outline: none; }
   #chat-send {
-    padding: 0 1rem;
-    background: #3b82f6;
+    background: #6366f1;
     color: white;
     border: none;
+    padding: 0 1rem;
     cursor: pointer;
+    font-size: 0.85rem;
   }
 </style>
 </head>
@@ -158,61 +155,87 @@
       <span class="desc">Extrae y desglosa datos de nómina desde CFDI</span>
     </a>
 
-    <footer>Eliezer Doño Andrade · Contador Corporativo</footer>
+    <footer>
+      Eliezer Doño Andrade · Contador Corporativo<br />
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSfepkq2vl5DliouT6pA_QrVbXnjwlY9fWT4C22vS5HAdnranA/viewform?usp=publish-editor"
+         target="_blank" rel="noopener"
+         style="color:#94a3b8; text-decoration:underline;">
+        ¿Encontraste un error o tienes una sugerencia?
+      </a>
+    </footer>
   </div>
 
-  <button id="chat-fab" onclick="document.getElementById('chat-box').classList.toggle('open')">💬</button>
-
-  <div id="chat-box">
-    <div id="chat-header">Asistente fiscal</div>
-    <div id="chat-messages">
-      <div class="msg bot">Hola 👋 ¿En qué herramienta puedo ayudarte hoy?</div>
-    </div>
+  <!-- Chat widget -->
+  <button id="chat-toggle" aria-label="Abrir chat fiscal">💬</button>
+  <div id="chat-panel">
+    <div id="chat-header">Asistente Fiscal y Contable</div>
+    <div id="chat-messages"></div>
     <div id="chat-input-row">
-      <input id="chat-input" type="text" placeholder="Escribe tu pregunta..." />
-      <button id="chat-send">➤</button>
+      <input id="chat-input" type="text" placeholder="Escribe tu duda..." />
+      <button id="chat-send">Enviar</button>
     </div>
   </div>
 
   <script>
-    const messagesEl = document.getElementById('chat-messages');
-    const inputEl = document.getElementById('chat-input');
-    const sendBtn = document.getElementById('chat-send');
+    const toggle = document.getElementById("chat-toggle");
+    const panel = document.getElementById("chat-panel");
+    const messagesEl = document.getElementById("chat-messages");
+    const input = document.getElementById("chat-input");
+    const sendBtn = document.getElementById("chat-send");
 
-    function addMessage(text, who) {
-      const div = document.createElement('div');
-      div.className = 'msg ' + who;
+    let history = [];
+
+    toggle.addEventListener("click", () => {
+      panel.classList.toggle("open");
+    });
+
+    function addMessage(text, role) {
+      const div = document.createElement("div");
+      div.className = "msg " + role;
       div.textContent = text;
       messagesEl.appendChild(div);
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
     async function sendMessage() {
-      const text = inputEl.value.trim();
+      const text = input.value.trim();
       if (!text) return;
-      addMessage(text, 'user');
-      inputEl.value = '';
-      addMessage('Escribiendo...', 'bot');
+      addMessage(text, "user");
+      input.value = "";
+
+      const thinkingEl = document.createElement("div");
+      thinkingEl.className = "msg bot";
+      thinkingEl.textContent = "Escribiendo...";
+      messagesEl.appendChild(thinkingEl);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
 
       try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text })
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, history }),
         });
         const data = await res.json();
-        messagesEl.removeChild(messagesEl.lastChild);
-        addMessage(data.reply || 'Sin respuesta.', 'bot');
+        thinkingEl.remove();
+
+        if (data.reply) {
+          addMessage(data.reply, "bot");
+          history.push({ role: "user", content: text });
+          history.push({ role: "assistant", content: data.reply });
+        } else {
+          addMessage("Ocurrió un error. Intenta de nuevo.", "bot");
+        }
       } catch (err) {
-        messagesEl.removeChild(messagesEl.lastChild);
-        addMessage('Error al conectar con el asistente.', 'bot');
+        thinkingEl.remove();
+        addMessage("No se pudo conectar con el asistente.", "bot");
       }
     }
 
-    sendBtn.addEventListener('click', sendMessage);
-    inputEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') sendMessage();
+    sendBtn.addEventListener("click", sendMessage);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
     });
   </script>
 </body>
 </html>
+
