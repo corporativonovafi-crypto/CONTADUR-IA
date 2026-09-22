@@ -37,6 +37,24 @@
   a.link-card:hover { background: #273449; border-color: #475569; transform: translateY(-2px); }
   a.link-card .name { font-weight: 600; font-size: 1rem; display: block; margin-bottom: 0.2rem; }
   a.link-card .desc { font-size: 0.82rem; color: #94a3b8; }
+  a.link-card .tag {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid #475569;
+    border-radius: 999px;
+    color: #cbd5e1;
+  }
+  a.link-card .note {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.75rem;
+    color: #64748b;
+    font-style: italic;
+  }
   footer { margin-top: 2rem; font-size: 0.75rem; color: #64748b; }
 
   /* --- Chat widget --- */
@@ -137,22 +155,26 @@
 
     <a class="link-card" href="https://mi-plataforma-fiscal.vercel.app" target="_blank" rel="noopener">
       <span class="name">📄 Análisis XML</span>
-      <span class="desc">Analiza y valida tus XML de CFDI</span>
+      <span class="desc">Analiza tus XML de CFDI para el pago de impuestos</span>
+      <span class="tag">Personas físicas · Demo</span>
+    </a>
+
+    <a class="link-card" href="https://estimador-de-impuestos.vercel.app" target="_blank" rel="noopener">
+      <span class="name">🧮 Estimador de impuestos</span>
+      <span class="desc">Carga el resumen del Análisis XML y calcula tus impuestos aproximados, desglosados como PF RG o RESICO</span>
+      <span class="tag">Personas físicas</span>
     </a>
 
     <a class="link-card" href="https://analizador-de-xml.vercel.app" target="_blank" rel="noopener">
       <span class="name">🔍 Auditor</span>
       <span class="desc">Audita XML y detecta inconsistencias fiscales</span>
-    </a>
-
-    <a class="link-card" href="https://estimador-de-impuestos.vercel.app" target="_blank" rel="noopener">
-      <span class="name">🧮 Estimador de impuestos</span>
-      <span class="desc">Calcula y estima impuestos a pagar</span>
+      <span class="tag">Personas morales</span>
     </a>
 
     <a class="link-card" href="https://extractor-nomina-cfdi.vercel.app" target="_blank" rel="noopener">
       <span class="name">💼 Extractor de nómina CFDI</span>
-      <span class="desc">Extrae y desglosa datos de nómina desde CFDI</span>
+      <span class="desc">Extrae y desglosa tus CFDI de nómina para tu declaración</span>
+      <span class="tag">Trabajadores</span>
     </a>
 
     <footer>
@@ -238,4 +260,3 @@
   </script>
 </body>
 </html>
-
