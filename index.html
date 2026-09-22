@@ -245,7 +245,7 @@
           history.push({ role: "user", content: text });
           history.push({ role: "assistant", content: data.reply });
         } else {
-          addMessage("Ocurrió un error. Intenta de nuevo.", "bot");
+          addMessage("Error: " + (data.error || "respuesta vacía"), "bot");
         }
       } catch (err) {
         thinkingEl.remove();
