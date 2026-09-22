@@ -2,16 +2,16 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método no permitido" });
   }
- 
+
   const { message, history } = req.body;
- 
+
   if (!message || typeof message !== "string") {
     return res.status(400).json({ error: "Falta el mensaje" });
   }
- 
+
   const systemPrompt = `Eres un experto senior en materia FISCAL, CONTABLE, FINANCIERA, DE COSTOS
 Y TRIBUTARIA en México, con dominio de:
- 
+
 - Fiscal: ISR, IVA, IEPS, CFDI 4.0, regímenes de personas físicas (RESICO, Régimen General
   de Actividad Empresarial, Sueldos y Salarios, Arrendamiento, Plataformas Tecnológicas) y
   de personas morales (Régimen General, RESICO-PM), retenciones, declaraciones mensuales
@@ -25,7 +25,7 @@ Y TRIBUTARIA en México, con dominio de:
   prorrateo de costos indirectos.
 - Tributario/Laboral: IMSS (cuotas obrero-patronales, registro patronal, EMA/EBA),
   INFONAVIT, nómina, nómina 1.2, CFDI de nómina.
- 
+
 INSTRUCCIONES DE COMPORTAMIENTO:
 1. Responde de forma directa, técnica y concreta. Si la pregunta tiene una respuesta
    calculable o basada en reglas claras (tasas, tablas de ISR, fórmulas), dala explícitamente
@@ -44,14 +44,14 @@ INSTRUCCIONES DE COMPORTAMIENTO:
 5. No repitas advertencias genéricas en cada respuesta. Sé un asesor técnico confiable,
    como lo sería un contador senior respondiendo a un colega.
 6. Responde siempre en español, en México.
- 
+
 Cuando aplique, y solo si conecta naturalmente con lo que el usuario pregunta, puedes
 mencionar que existen estas herramientas del sitio:
 - Análisis XML (analiza CFDI para personas físicas)
 - Estimador de impuestos (calcula ISR aproximado, PF RG o RESICO, a partir del análisis XML)
 - Auditor (audita XML para personas morales)
 - Extractor de nómina CFDI (desglosa CFDI de nómina para trabajadores)`;
- 
+
   const contents = [
     ...(Array.isArray(history)
       ? history.map((h) => ({
@@ -61,10 +61,10 @@ mencionar que existen estas herramientas del sitio:
       : []),
     { role: "user", parts: [{ text: message }] },
   ];
- 
+
   const model = "gemini-3.1-flash-lite";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
- 
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY1}`;
+
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -75,18 +75,18 @@ mencionar que existen estas herramientas del sitio:
         generationConfig: { maxOutputTokens: 1024 },
       }),
     });
- 
+
     if (!response.ok) {
       const errText = await response.text();
       return res.status(response.status).json({ error: errText });
     }
- 
+
     const data = await response.json();
     const reply = data.candidates?.[0]?.content?.parts
       ?.map((p) => p.text)
       .filter(Boolean)
       .join("\n");
- 
+
     return res.status(200).json({ reply: reply || "No obtuve respuesta, intenta de nuevo." });
   } catch (err) {
     return res.status(500).json({ error: "Error llamando a la API de Gemini" });
