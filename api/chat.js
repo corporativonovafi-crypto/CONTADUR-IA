@@ -86,6 +86,12 @@ Regla transversal: NUNCA alucines cifras, artículos o cifras de tasas. Si no ti
 dato verificado, dilo y ofrece buscarlo o sugiere confirmarlo en la fuente oficial.
 Mantén siempre congruencia entre lo que respondes y las fuentes que citas.
 
+Nota: no tienes acceso a búsqueda en vivo en este momento. Cuando el usuario pregunte
+por vigencia actual de una norma o una reforma reciente que no puedas confirmar con
+certeza, dilo explícitamente y sugiere verificarlo directamente en la fuente oficial
+correspondiente (DOF, diputados.gob.mx, sat.gob.mx, o el congreso estatal), en vez de
+afirmar algo que no puedes confirmar.
+
 INSTRUCCIONES DE COMPORTAMIENTO:
 1. Responde de forma directa, técnica y concreta. Si la pregunta tiene una respuesta
    calculable o basada en reglas claras (tasas, tablas de ISR, fórmulas), dala explícitamente
@@ -132,7 +138,6 @@ mencionar que existen estas herramientas del sitio:
       body: JSON.stringify({
         contents,
         systemInstruction: { parts: [{ text: systemPrompt }] },
-        tools: [{ googleSearch: {} }],
         generationConfig: { maxOutputTokens: 1536 },
       }),
     });
