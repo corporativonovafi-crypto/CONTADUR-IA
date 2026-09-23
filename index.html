@@ -10,52 +10,135 @@
     margin: 0;
     min-height: 100vh;
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    background: linear-gradient(180deg, #0b1220 0%, #1a2436 100%);
     display: flex;
     justify-content: center;
-    padding: 3rem 1rem;
+    padding: 3.5rem 1rem;
   }
   .wrap {
     width: 100%;
-    max-width: 420px;
+    max-width: 680px;
     text-align: center;
     color: #f1f5f9;
   }
-  h1 { font-size: 1.4rem; margin-bottom: 0.25rem; }
-  p.subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; }
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.01em;
+  }
+  p.subtitle { color: #94a3b8; font-size: 0.88rem; margin-bottom: 2.25rem; }
+
+  /* --- Hero AI input --- */
+  .hero-ai { margin-bottom: 2.25rem; }
+  .hero-ai-box {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #17212f;
+    border: 1px solid #3a3120;
+    border-radius: 999px;
+    padding: 0.4rem 0.4rem 0.4rem 1.25rem;
+    box-shadow: 0 4px 24px rgba(212, 175, 55, 0.08);
+  }
+  .hero-ai-icon { font-size: 1.1rem; }
+  #hero-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #f1f5f9;
+    font-size: 0.95rem;
+    padding: 0.6rem 0;
+    outline: none;
+  }
+  #hero-input::placeholder { color: #8b93a3; }
+  #hero-send {
+    background: #d4af37;
+    color: #1a1408;
+    border: none;
+    border-radius: 999px;
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .hero-ai-caption {
+    text-align: center;
+    font-size: 0.74rem;
+    color: #64748b;
+    margin-top: 0.6rem;
+  }
+
+  /* --- Profile selector --- */
+  .profile-selector {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+  }
+  .profile-pill {
+    padding: 0.6rem 1.15rem;
+    border-radius: 999px;
+    border: 1px solid #334155;
+    background: #17212f;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  }
+  .profile-pill:hover { border-color: #475569; }
+  .profile-pill.active {
+    border-color: #d4af37;
+    color: #f5e7b8;
+    background: #241f10;
+  }
+  .profile-hint {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-bottom: 1.5rem;
+  }
+
+  /* --- Tools panels (filtered by profile) --- */
+  .tools-panel {
+    display: none;
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: left;
+    margin-bottom: 1.75rem;
+  }
+  .tools-panel.active { display: flex; }
   a.link-card {
     display: block;
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: #17212f;
+    border: 1px solid #2c3746;
     border-radius: 14px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 0.85rem;
+    padding: 0.95rem 1.2rem;
     text-decoration: none;
     color: #f1f5f9;
     transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
   }
-  a.link-card:hover { background: #273449; border-color: #475569; transform: translateY(-2px); }
-  a.link-card .name { font-weight: 600; font-size: 1rem; display: block; margin-bottom: 0.2rem; }
-  a.link-card .desc { font-size: 0.82rem; color: #94a3b8; }
-  a.link-card .tag {
-    display: inline-block;
-    margin-top: 0.5rem;
-    padding: 0.15rem 0.55rem;
-    font-size: 0.68rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    border: 1px solid #475569;
-    border-radius: 999px;
-    color: #cbd5e1;
-  }
-  a.link-card .note {
+  a.link-card:hover { background: #1e2a3b; border-color: #d4af37; transform: translateY(-2px); }
+  a.link-card .name { font-weight: 600; font-size: 0.98rem; display: block; margin-bottom: 0.2rem; }
+  a.link-card .desc { font-size: 0.8rem; color: #94a3b8; }
+
+  a.legal-banner {
     display: block;
-    margin-top: 0.35rem;
-    font-size: 0.75rem;
-    color: #64748b;
-    font-style: italic;
+    background: linear-gradient(90deg, #241f10 0%, #17212f 100%);
+    border: 1px solid #6b5a20;
+    border-radius: 14px;
+    padding: 1rem 1.5rem;
+    text-decoration: none;
+    color: #f1f5f9;
+    text-align: center;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    margin-bottom: 1rem;
   }
-  footer { margin-top: 2rem; font-size: 0.75rem; color: #64748b; }
+  a.legal-banner:hover { transform: translateY(-2px); border-color: #d4af37; }
+  a.legal-banner .name { font-weight: 600; font-size: 1rem; display: block; margin-bottom: 0.2rem; }
+  a.legal-banner .desc { font-size: 0.8rem; color: #e6d9a8; }
+
+  footer { margin-top: 1.5rem; font-size: 0.75rem; color: #64748b; }
 
   /* --- Chat widget --- */
   #chat-toggle {
@@ -65,8 +148,8 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: #6366f1;
-    color: white;
+    background: #d4af37;
+    color: #1a1408;
     border: none;
     font-size: 1.4rem;
     cursor: pointer;
@@ -116,8 +199,8 @@
   }
   .msg.user {
     align-self: flex-end;
-    background: #6366f1;
-    color: white;
+    background: #d4af37;
+    color: #1a1408;
   }
   .msg.bot {
     align-self: flex-start;
@@ -139,8 +222,8 @@
     outline: none;
   }
   #chat-send {
-    background: #6366f1;
-    color: white;
+    background: #d4af37;
+    color: #1a1408;
     border: none;
     padding: 0 1rem;
     cursor: pointer;
@@ -151,30 +234,56 @@
 <body>
   <div class="wrap">
     <h1>Mis Herramientas Fiscales</h1>
-    <p class="subtitle">Elige la que necesitas usar</p>
+    <p class="subtitle">Pregunta directo o elige tu perfil para ver tus herramientas</p>
 
-    <a class="link-card" href="https://mi-plataforma-fiscal.vercel.app" target="_blank" rel="noopener">
-      <span class="name">📄 Análisis XML</span>
-      <span class="desc">Analiza tus XML de CFDI para el pago de impuestos</span>
-      <span class="tag">Personas físicas · Demo</span>
-    </a>
+    <div class="hero-ai">
+      <div class="hero-ai-box">
+        <span class="hero-ai-icon">✨</span>
+        <input id="hero-input" type="text" placeholder="Pregúntale a la IA — fiscal, contable, financiero o legal..." />
+        <button id="hero-send" aria-label="Enviar">➤</button>
+      </div>
+      <div class="hero-ai-caption">Responde con IA y te dirige a la herramienta correcta si aplica</div>
+    </div>
 
-    <a class="link-card" href="https://estimador-de-impuestos.vercel.app" target="_blank" rel="noopener">
-      <span class="name">🧮 Estimador de impuestos</span>
-      <span class="desc">Carga el resumen del Análisis XML y calcula tus impuestos aproximados, desglosados como PF RG o RESICO</span>
-      <span class="tag">Personas físicas</span>
-    </a>
+    <div class="profile-selector">
+      <button class="profile-pill" data-profile="trabajador">Trabajador</button>
+      <button class="profile-pill" data-profile="negocio">Persona física con negocio</button>
+      <button class="profile-pill" data-profile="empresa">Empresa</button>
+    </div>
+    <div class="profile-hint">Toca tu perfil para ver solo lo que te aplica</div>
 
-    <a class="link-card" href="https://analizador-de-xml.vercel.app" target="_blank" rel="noopener">
-      <span class="name">🔍 Auditor</span>
-      <span class="desc">Audita XML y detecta inconsistencias fiscales</span>
-      <span class="tag">Personas morales</span>
-    </a>
+    <div class="tools-panel" data-panel="trabajador">
+      <a class="link-card" href="https://extractor-nomina-cfdi.vercel.app" target="_blank" rel="noopener">
+        <span class="name">💼 Extractor de nómina CFDI</span>
+        <span class="desc">Extrae y desglosa tus CFDI de nómina para tu declaración</span>
+      </a>
+    </div>
 
-    <a class="link-card" href="https://extractor-nomina-cfdi.vercel.app" target="_blank" rel="noopener">
-      <span class="name">💼 Extractor de nómina CFDI</span>
-      <span class="desc">Extrae y desglosa tus CFDI de nómina para tu declaración</span>
-      <span class="tag">Trabajadores</span>
+    <div class="tools-panel" data-panel="negocio">
+      <a class="link-card" href="https://mi-plataforma-fiscal.vercel.app" target="_blank" rel="noopener">
+        <span class="name">📄 Análisis XML</span>
+        <span class="desc">Analiza tus XML de CFDI para el pago de impuestos (versión demo)</span>
+      </a>
+      <a class="link-card" href="https://estimador-de-impuestos.vercel.app" target="_blank" rel="noopener">
+        <span class="name">🧮 Estimador de impuestos</span>
+        <span class="desc">Carga el resumen del Análisis XML y calcula tus impuestos aproximados, desglosados como PF RG o RESICO</span>
+      </a>
+    </div>
+
+    <div class="tools-panel" data-panel="empresa">
+      <a class="link-card" href="https://analizador-de-xml.vercel.app" target="_blank" rel="noopener">
+        <span class="name">🔍 Auditor</span>
+        <span class="desc">Audita XML y detecta inconsistencias fiscales</span>
+      </a>
+      <a class="link-card" href="https://hugh83409.softr.app/" target="_blank" rel="noopener">
+        <span class="name">🏛️ Fedaria</span>
+        <span class="desc">Solicita asesoría de trámites ante corredores, fedatarios y notarios públicos</span>
+      </a>
+    </div>
+
+    <a class="legal-banner" href="https://docs.google.com/forms/d/e/1FAIpQLSfgJDyrE0eIj_SnsUc5xPv-RtHyJShaLpI5E58sfBDB2oGIIA/viewform?usp=publish-editor" target="_blank" rel="noopener">
+      <span class="name">⚖️ Asesoría legal</span>
+      <span class="desc">Plantea tu duda a un abogado — para trabajadores, personas físicas con negocio y empresas</span>
     </a>
 
     <footer>
@@ -256,6 +365,46 @@
     sendBtn.addEventListener("click", sendMessage);
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") sendMessage();
+    });
+
+    // Hero input: opens the chat panel and forwards the first message
+    const heroInput = document.getElementById("hero-input");
+    const heroSend = document.getElementById("hero-send");
+
+    function launchFromHero() {
+      const text = heroInput.value.trim();
+      if (!text) {
+        panel.classList.add("open");
+        return;
+      }
+      panel.classList.add("open");
+      input.value = text;
+      heroInput.value = "";
+      sendMessage();
+    }
+
+    heroSend.addEventListener("click", launchFromHero);
+    heroInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") launchFromHero();
+    });
+
+    // Profile selector: filters visible tools panel
+    const pills = document.querySelectorAll(".profile-pill");
+    const panels = document.querySelectorAll(".tools-panel");
+
+    pills.forEach((pill) => {
+      pill.addEventListener("click", () => {
+        const target = pill.dataset.profile;
+        const alreadyActive = pill.classList.contains("active");
+
+        pills.forEach((p) => p.classList.remove("active"));
+        panels.forEach((pn) => pn.classList.remove("active"));
+
+        if (!alreadyActive) {
+          pill.classList.add("active");
+          document.querySelector('.tools-panel[data-panel="' + target + '"]').classList.add("active");
+        }
+      });
     });
   </script>
 </body>
