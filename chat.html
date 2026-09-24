@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Asistente Fiscal y Contable</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: linear-gradient(180deg, #0b1220 0%, #1a2436 100%);
+    color: #f1f5f9; display: flex; justify-content: center;
+  }
+  .boot {
+    background: #3a1d1d; border: 1px solid #a1412f; border-radius: 12px;
+    padding: 0.85rem 1rem; margin: 0.9rem auto 0; max-width: 1180px; width: calc(100% - 2rem);
+    font-size: 0.82rem; line-height: 1.5; color: #ffd9d1;
+    display: flex; flex-direction: column; gap: 0.35rem;
+  }
+  .boot[hidden] { display: none; }
+  .boot .hint { color: #e8b3a7; font-size: 0.76rem; }
+  .app {
+    display: grid; grid-template-columns: 280px 1fr; width: 100%; max-width: 1180px;
+    height: calc(100vh - 2rem); margin: 1rem; border: 1px solid #2c3746;
+    border-radius: 16px; overflow: hidden; background: #0f1826;
+  }
+  /* -------------------------------- lateral -------------------------------- */
+  .side { background: #101a27; border-right: 1px solid #223047; display: flex; flex-direction: column; min-width: 0; }
+  .side-head { padding: 0.75rem; border-bottom: 1px solid #223047; display: flex; gap: 0.5rem; }
+  .side-head .btn { flex: 1; }
+  .convs { flex: 1; overflow-y: auto; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem; }
+  .conv {
+    display: flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.6rem; border-radius: 10px;
+    cursor: pointer; border: 1px solid transparent; min-width: 0;
+  }
+  .conv:hover { background: #16212f; }
+  .conv.active { background: #1b2738; border-color: #3a4a60; }
+  .conv .txt { flex: 1; min-width: 0; }
+  .conv .t { font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .conv .d { font-size: 0.68rem; color: #7c8899; }
+  .conv .acts { display: none; gap: 0.15rem; }
+  .conv:hover .acts, .conv.active .acts { display: flex; }
+  .icon {
+    background: transparent; border: none; color: #8b95a5; cursor: pointer;
+    font-size: 0.85rem; padding: 0.15rem 0.25rem; border-radius: 6px; line-height: 1;
+  }
+  .icon:hover { color: #d4af37; background: #223047; }
+  .side-foot { padding: 0.6rem 0.75rem; border-top: 1px solid #223047; font-size: 0.68rem; color: #64748b; line-height: 1.5; }
+  /* ---------------------------------- main --------------------------------- */
+  .main { display: flex; flex-direction: column; min-width: 0; }
+  .top {
+    display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.9rem;
+    border-bottom: 1px solid #223047; background: #121c2a; min-height: 52px;
+  }
+  .burger { display: none; background: transparent; border: 1px solid #334155; color: #cbd5e1; border-radius: 8px; padding: 0.25rem 0.5rem; cursor: pointer; }
+  .top .title { flex: 1; font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .top-actions { display: flex; gap: 0.35rem; }
+  .msgs { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+  .msg { max-width: 78%; padding: 0.65rem 0.85rem; border-radius: 12px; font-size: 0.87rem; line-height: 1.55; }
+  .msg.user { align-self: flex-end; background: #d4af37; color: #1a1408; }
+  .msg.bot { align-self: flex-start; background: #16212f; border: 1px solid #2c3746; color: #e8eef7; }
+  .msg .body { white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; }
+  .msg .body pre { background: #0d1622; border: 1px solid #2c3746; border-radius: 8px; padding: 0.5rem; overflow-x: auto; font-size: 0.78rem; margin: 0.4rem 0; }
+  .msg .body code { background: #0d1622; padding: 0.08rem 0.3rem; border-radius: 5px; font-size: 0.82em; }
+  .msg .body ul { margin: 0.35rem 0; padding-left: 1.15rem; }
+  .msg .body strong { color: #fff; }
+  .msg .files { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.45rem; }
+  .msg .fchip { font-size: 0.68rem; background: #223047; border: 1px solid #33465f; border-radius: 999px; padding: 0.1rem 0.5rem; color: #cbd5e1; }
+  .msg .foot { display: flex; gap: 0.4rem; align-items: center; margin-top: 0.4rem; font-size: 0.66rem; color: #7c8899; }
+  .msg.user .foot { color: #6b5a20; }
+  .msg.user .foot .icon { color: #6b5a20; }
+  .msg.user .foot .icon:hover { color: #1a1408; background: #c9a533; }
+  .empty { margin: auto; text-align: center; color: #8b95a5; font-size: 0.85rem; max-width: 46ch; line-height: 1.6; }
+  .empty h2 { color: #e8eef7; font-size: 1.05rem; margin: 0 0 0.4rem; }
+  .privacy {
+    margin-top: 1rem; background: #14202e; border: 1px solid #2c3746; border-radius: 10px;
+    padding: 0.65rem 0.8rem; font-size: 0.74rem; color: #a8b6c8; line-height: 1.55; text-align: left;
+  }
+  .examples { display: flex; flex-direction: column; gap: 0.45rem; margin-top: 1rem; }
+  .example {
+    background: #131d2b; border: 1px solid #2c3746; color: #cbd5e1; border-radius: 10px;
+    padding: 0.55rem 0.75rem; font-size: 0.8rem; cursor: pointer; text-align: left;
+  }
+  .example:hover { border-color: #d4af37; color: #f1f5f9; }
+  /* -------------------------------- composer -------------------------------- */
+  .composer { border-top: 1px solid #223047; background: #121c2a; padding: 0.7rem 0.9rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.5rem; }
+  .chips:empty { display: none; }
+  .chip {
+    display: flex; align-items: center; gap: 0.4rem; background: #1b2738; border: 1px solid #3a4a60;
+    border-radius: 999px; padding: 0.22rem 0.55rem; font-size: 0.72rem; color: #cbd5e1;
+  }
+  .chip .x { cursor: pointer; color: #8b95a5; }
+  .chip .x:hover { color: #fca5a5; }
+  .row { display: flex; align-items: flex-end; gap: 0.5rem; }
+  .attach {
+    display: flex; align-items: center; justify-content: center; width: 38px; height: 38px;
+    border: 1px solid #334155; border-radius: 10px; cursor: pointer; font-size: 1rem; color: #cbd5e1;
+    flex-shrink: 0;
+  }
+  .attach:hover { border-color: #d4af37; color: #d4af37; }
+  textarea {
+    flex: 1; background: #0e1725; border: 1px solid #2c3746; border-radius: 10px; color: #f1f5f9;
+    font-family: inherit; font-size: 0.88rem; padding: 0.6rem 0.7rem; resize: none; outline: none;
+    max-height: 160px; line-height: 1.5;
+  }
+  textarea:focus { border-color: #d4af37; }
+  .btn {
+    border: 1px solid #d4af37; background: #d4af37; color: #1a1408; font-size: 0.82rem;
+    font-weight: 600; padding: 0.5rem 0.95rem; border-radius: 9px; cursor: pointer;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; color: #d4af37; }
+  .btn.ghost:hover { background: #241f10; }
+  .btn.sm { font-size: 0.74rem; padding: 0.35rem 0.6rem; }
+  .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+  .errbox {
+    background: #3a1d1d; border: 1px solid #a1412f; border-radius: 10px;
+    padding: 0.7rem 0.85rem; margin-bottom: 0.6rem; display: flex; flex-direction: column; gap: 0.4rem;
+  }
+  .errbox[hidden] { display: none; }
+  .errbox .etitle { font-size: 0.8rem; color: #ffd9d1; line-height: 1.5; }
+  .errbox pre {
+    margin: 0; background: #241111; border: 1px solid #6b3030; border-radius: 8px;
+    padding: 0.5rem; font-size: 0.7rem; color: #e8b3a7; max-height: 140px; overflow: auto;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .errbox .erow { display: flex; gap: 0.4rem; }
+  .hint { font-size: 0.72rem; color: #7c8899; margin-top: 0.45rem; line-height: 1.5; }
+  .hint.err { color: #fca5a5; }
+  .hint.warn { color: #f0d48a; }
+  a { color: #d4af37; }
+  .typing { display: inline-block; }
+  .typing span { animation: blink 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%, 60%, 100% { opacity: 0.25; } 30% { opacity: 1; } }
+  @media (max-width: 820px) {
+    .app { grid-template-columns: 1fr; height: calc(100vh - 1rem); margin: 0.5rem; }
+    .side { position: fixed; inset: 0 auto 0 0; width: 280px; z-index: 40; transform: translateX(-100%); transition: transform 0.2s; }
+    .side.open { transform: none; box-shadow: 0 0 40px rgba(0, 0, 0, 0.6); }
+    .burger { display: block; }
+    .msg { max-width: 92%; }
+  }
+</style>
+</head>
+<body>
+<div class="boot" id="bootError" hidden>
+  <strong>&#9888;&#65039; Algo fall&oacute; al iniciar el asistente</strong>
+  <span class="bootmsg"></span>
+  <span class="hint">Recarga con Ctrl+F5 (Cmd+Shift+R en Mac). Si sigue igual, m&aacute;ndame una foto de este aviso.</span>
+</div>
+
+<div class="app">
+  <aside class="side" id="side">
+    <div class="side-head">
+      <button class="btn" id="newChat">+ Nueva conversación</button>
+    </div>
+    <div class="convs" id="convs"></div>
+    <div class="side-foot">
+      Las conversaciones se guardan en este navegador. Los archivos que adjuntes sí se envían al modelo de IA.
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="top">
+      <button class="burger" id="burger" aria-label="Menú">&#9776;</button>
+      <div class="title" id="chatTitle">Conversación nueva</div>
+      <div class="top-actions">
+        <button class="btn ghost sm" id="renameBtn" title="Renombrar">Renombrar</button>
+        <button class="btn ghost sm" id="exportBtn" title="Descargar la conversación">Exportar</button>
+      </div>
+    </header>
+
+    <div class="msgs" id="msgs"></div>
+
+    <div class="composer">
+      <div class="errbox" id="errBox" hidden>
+        <div class="etitle" id="errTitle"></div>
+        <pre id="errDetail" hidden></pre>
+        <div class="erow">
+          <button class="btn ghost sm" id="errCopy" hidden>Copiar detalles</button>
+          <button class="btn ghost sm" id="errRetry">Reintentar</button>
+        </div>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="row">
+        <label class="attach" title="Adjuntar archivo (Excel, CSV, PDF, TXT o imagen)">
+          <input type="file" id="attach" multiple hidden
+                 accept=".xlsx,.xls,.xlsm,.ods,.csv,.tsv,.txt,.md,.json,.xml,.log,.pdf,image/*" />
+          &#128206;
+        </label>
+        <textarea id="input" rows="1" placeholder="Escribe tu duda fiscal, contable, financiera o legal…"></textarea>
+        <button class="btn" id="send">Enviar</button>
+      </div>
+      <div class="hint" id="hint"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+  /* Vigilante de arranque: si algo falla, avisa en pantalla en vez de quedarse muda. */
+  (function () {
+    function show(msg) {
+      var el = document.getElementById("bootError");
+      if (!el) return;
+      el.hidden = false;
+      var m = el.querySelector(".bootmsg");
+      if (m && m.textContent !== msg) m.textContent = msg;
+    }
+    window.__fiscalFallo = show;
+    window.addEventListener("error", function (e) {
+      if (e && e.target && e.target.tagName === "SCRIPT") {
+        show("No se pudo cargar una libreria externa (se necesita internet). Revisa tu conexion y recarga la pagina.");
+      }
+    }, true);
+    window.addEventListener("unhandledrejection", function () {
+      show("Ocurrio un error inesperado al iniciar el asistente. Recarga la pagina.");
+    });
+    setTimeout(function () {
+      if (!window.__fiscalOk) {
+        show("El asistente no termino de iniciar. Lo mas comun es que la pagina no se haya descargado completa desde el sitio.");
+      }
+    }, 3000);
+  })();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script type="module">
+if (typeof XLSX === "undefined") {
+  window.__fiscalFallo("No se pudo cargar la libreria de Excel (se necesita internet). Sin ella no se pueden leer archivos .xlsx ni .csv.");
+}
+
+/* ============================================================================
+   Asistente fiscal con historial persistente y archivos adjuntos.
+   - Las conversaciones viven en el navegador (localStorage): al recargar siguen.
+   - Excel, CSV, TXT y PDF con texto se convierten a texto EN EL NAVEGADOR y se
+     mandan como parte del mensaje: sirven para toda la conversación.
+   - Los que no se pueden convertir a texto (imagenes y PDF escaneado) se mandan
+     al modelo como archivo, y solo valen para ese mensaje.
+   ============================================================================ */
+
+const PDFJS_VER = "4.10.38";
+const STORE_KEY = "mhf-chat-v1";
+
+/* Dirección de tu función del asistente.
+   Déjala VACÍA cuando el chat viva en tu mismo sitio (lo normal): así llama a
+   /api/chat dentro de tu propio dominio.
+   Pon la dirección completa SOLO si quieres probar el chat desde otro lugar
+   (por ejemplo el editor en línea), terminando en /api/chat:
+   const API_URL = "https://mi-sitio.vercel.app/api/chat"; */
+const API_URL = "";
+const MAX_TEXTO = 30000;          // caracteres de texto por archivo
+const MAX_IMAGEN = 900 * 1024;    // imagenes: 900 KB antes de convertir a base64
+const MAX_PDF_ESCANEADO = 900 * 1024;
+const TURNOS_MEMORIA = 12;        // cuantos mensajes previos se mandan al modelo
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmtBytes = (n) => n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1048576).toFixed(1)} MB`;
+
+let pdfjs = null;
+async function loadPdfJs() {
+  if (pdfjs) return pdfjs;
+  try {
+    const mod = await import(`https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VER}/build/pdf.min.mjs`);
+    mod.GlobalWorkerOptions.workerSrc =
+      `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VER}/build/pdf.worker.min.mjs`;
+    pdfjs = mod;
+    return mod;
+  } catch (e) {
+    throw new Error("No se pudo cargar el lector de PDF (se necesita internet).");
+  }
+}
+
+/* ------------------------------- almacenamiento ------------------------------- */
+
+function loadStore() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    const s = raw ? JSON.parse(raw) : null;
+    if (!s || !Array.isArray(s.conversations)) return { conversations: [], activeId: null };
+    return s;
+  } catch (e) {
+    return { conversations: [], activeId: null };
+  }
+}
+function saveStore() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(store));
+    return true;
+  } catch (e) {
+    setHint("No se pudo guardar la conversación: el almacenamiento del navegador está lleno. Borra conversaciones viejas.", "err");
+    return false;
+  }
+}
+const store = loadStore();
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const activeConvo = () => store.conversations.find((c) => c.id === store.activeId) || null;
+
+function newConvo() {
+  const c = { id: uid(), title: "Conversación nueva", createdAt: Date.now(), updatedAt: Date.now(), messages: [] };
+  store.conversations.unshift(c);
+  store.activeId = c.id;
+  saveStore();
+  renderSidebar();
+  renderMessages();
+  $("input").focus();
+  return c;
+}
+
+/* --------------------------------- archivos --------------------------------- */
+
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(String(fr.result).split(",")[1] || "");
+    fr.onerror = () => reject(new Error("No se pudo leer el archivo."));
+    fr.readAsDataURL(file);
+  });
+}
+
+async function pdfToText(file) {
+  const lib = await loadPdfJs();
+  const doc = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  const out = [];
+  for (let p = 1; p <= doc.numPages; p++) {
+    const page = await doc.getPage(p);
+    const content = await page.getTextContent();
+    const byY = new Map();
+    for (const it of content.items) {
+      if (!it.str || !it.str.trim()) continue;
+      const y = Math.round(it.transform[5] / 2) * 2;
+      const arr = byY.get(y);
+      if (arr) arr.push({ x: it.transform[4], s: it.str });
+      else byY.set(y, [{ x: it.transform[4], s: it.str }]);
+    }
+    for (const [, bits] of [...byY.entries()].sort((a, b) => b[0] - a[0])) {
+      bits.sort((a, b) => a.x - b.x);
+      out.push(bits.map((b) => b.s).join(" "));
+    }
+    out.push("");
+  }
+  return out.join("\n");
+}
+
+async function readFile(file) {
+  const ext = (file.name.split(".").pop() || "").toLowerCase();
+  const mime = file.type || "";
+
+  if (mime.startsWith("image/")) {
+    if (file.size > MAX_IMAGEN) {
+      throw new Error(`${file.name} pesa ${fmtBytes(file.size)} y el máximo para imágenes es ${fmtBytes(MAX_IMAGEN)}. Redúcela y vuelve a intentar.`);
+    }
+    return { name: file.name, kind: "imagen", mimeType: mime, data: await toBase64(file) };
+  }
+
+  if (ext === "pdf" || mime === "application/pdf") {
+    let text = "";
+    try { text = await pdfToText(file); } catch (e) { text = ""; }
+    if (text.replace(/\s/g, "").length >= 80) {
+      return { name: file.name, kind: "PDF (texto)", text: text.slice(0, MAX_TEXTO) };
+    }
+    if (file.size > MAX_PDF_ESCANEADO) {
+      throw new Error(`${file.name} parece un PDF escaneado y pesa ${fmtBytes(file.size)}; el máximo es ${fmtBytes(MAX_PDF_ESCANEADO)}. Comprime el PDF o exporta el Excel/CSV del sistema.`);
+    }
+    return { name: file.name, kind: "PDF escaneado", mimeType: "application/pdf", data: await toBase64(file) };
+  }
+
+  if (["xlsx", "xls", "xlsm", "ods"].includes(ext)) {
+    const wb = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
+    const partes = wb.SheetNames.slice(0, 3).map((n) =>
+      `Hoja "${n}":\n${XLSX.utils.sheet_to_csv(wb.Sheets[n])}`);
+    const text = partes.join("\n\n");
+    return { name: file.name, kind: "hoja de cálculo", text: text.slice(0, MAX_TEXTO) };
+  }
+
+  if (["csv", "tsv", "txt", "md", "json", "xml", "log"].includes(ext) || mime.startsWith("text/")) {
+    return { name: file.name, kind: "texto", text: (await file.text()).slice(0, MAX_TEXTO) };
+  }
+
+  throw new Error(`No sé leer archivos .${ext}. Acepto Excel, CSV, TXT, PDF e imágenes.`);
+}
+
+let pending = [];       // adjuntos listos para el próximo mensaje
+let busy = false;
+
+function renderChips() {
+  $("chips").innerHTML = pending.map((a, i) =>
+    `<span class="chip">&#128206; ${esc(a.name)} <span style="color:#7c8899">(${esc(a.kind)})</span>
+     <span class="x" data-i="${i}" title="Quitar">&#10005;</span></span>`).join("");
+  $("chips").querySelectorAll(".x").forEach((x) =>
+    x.addEventListener("click", () => { pending.splice(Number(x.dataset.i), 1); renderChips(); }));
+}
+
+async function addFiles(list) {
+  const files = Array.from(list || []);
+  if (!files.length) return;
+  setHint("Leyendo archivo(s)…");
+  for (const f of files) {
+    try {
+      const a = await readFile(f);
+      pending.push(a);
+      if (a.kind === "imagen" || a.kind === "PDF escaneado") {
+        setHint(`"${f.name}" se enviará completo al modelo y solo sirve para este mensaje. Para seguir preguntando sobre él, explica todo en el mismo mensaje.`, "warn");
+      } else {
+        setHint(`"${f.name}" listo: quedará disponible en toda la conversación.`);
+      }
+    } catch (e) {
+      setHint(e.message, "err");
+    }
+  }
+  renderChips();
+}
+
+/* --------------------------------- mensajes --------------------------------- */
+
+function expand(m) {
+  let t = m.content || "";
+  for (const d of m.docs || []) t += `\n\n--- Archivo: ${d.name} ---\n${d.text}`;
+  return t.trim();
+}
+
+function miniMarkdown(text) {
+  let h = esc(text);
+  h = h.replace(/```([\s\S]*?)```/g, (_, c) => `<pre>${c.replace(/^\n+|\n+$/g, "")}</pre>`);
+  h = h.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  h = h.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+  h = h.replace(/^[-*]\s+(.+)$/gm, "<ul><li>$1</li></ul>").replace(/<\/ul>\s*<ul>/g, "");
+  return h;
+}
+
+function renderMessages() {
+  const c = activeConvo();
+  const host = $("msgs");
+  $("chatTitle").textContent = c ? c.title : "Conversación nueva";
+  if (!c || !c.messages.length) {
+    host.innerHTML = `<div class="empty">
+      <h2>¿En qué te ayudo?</h2>
+      Pregunta lo que necesites o adjunta un archivo con el clip &#128206;.
+      <div class="privacy">
+        &#128274; Tus conversaciones se guardan en <strong>tu navegador</strong>.
+        Los archivos que adjuntes <strong>sí se envían</strong> al modelo para su análisis.
+        Para estados de cuenta usa el <a href="/estado-de-cuenta.html">extractor</a>,
+        que corre en tu equipo y no manda nada a internet.
+      </div>
+      <div class="examples">
+        <button class="example">¿Cuánto ISR e IVA pago si facturé $850,000 en el año en RESICO?</button>
+        <button class="example">¿Cómo registro contablemente la depreciación de un equipo de cómputo?</button>
+        <button class="example">Revisa este archivo y dime si los cálculos de IVA están bien.</button>
+      </div>
+    </div>`;
+    host.querySelectorAll(".example").forEach((b) =>
+      b.addEventListener("click", () => { $("input").value = b.textContent; $("input").focus(); }));
+    return;
+  }
+  host.innerHTML = c.messages.map((m, i) => {
+    const files = (m.files || []).length
+      ? `<div class="files">${m.files.map((f) => `<span class="fchip">&#128206; ${esc(f)}</span>`).join("")}</div>` : "";
+    const when = m.at ? new Date(m.at).toLocaleString("es-MX", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+    const body = m.role === "user" ? `<div class="body">${esc(m.content)}</div>` : `<div class="body">${miniMarkdown(m.content)}</div>`;
+    const tools = m.role === "assistant"
+      ? `<button class="icon copy" data-i="${i}" title="Copiar">&#128203;</button>`
+      : "";
+    return `<div class="msg ${m.role === "user" ? "user" : "bot"}">${body}${files}
+      <div class="foot"><span>${esc(when)}</span>${tools}</div></div>`;
+  }).join("");
+  host.querySelectorAll(".copy").forEach((b) =>
+    b.addEventListener("click", async () => {
+      const m = activeConvo().messages[Number(b.dataset.i)];
+      try { await navigator.clipboard.writeText(m.content); setHint("Respuesta copiada."); }
+      catch (e) { setHint("No se pudo copiar.", "err"); }
+    }));
+  host.scrollTop = host.scrollHeight;
+}
+
+function renderSidebar() {
+  const host = $("convs");
+  if (!store.conversations.length) {
+    host.innerHTML = `<div style="padding:0.6rem;font-size:0.75rem;color:#64748b">Aún no hay conversaciones.</div>`;
+    return;
+  }
+  host.innerHTML = store.conversations.map((c) => {
+    const last = c.messages.length ? c.messages[c.messages.length - 1].at : c.createdAt;
+    const n = c.messages.length;
+    return `<div class="conv ${c.id === store.activeId ? "active" : ""}" data-id="${c.id}">
+      <div class="txt">
+        <div class="t">${esc(c.title)}</div>
+        <div class="d">${n ? `${n} mensaje${n === 1 ? "" : "s"}` : "vacía"} · ${new Date(last).toLocaleDateString("es-MX", { day: "2-digit", month: "short" })}</div>
+      </div>
+      <div class="acts">
+        <button class="icon ren" data-id="${c.id}" title="Renombrar">&#9998;</button>
+        <button class="icon del" data-id="${c.id}" title="Borrar">&#10005;</button>
+      </div>
+    </div>`;
+  }).join("");
+  host.querySelectorAll(".conv").forEach((el) =>
+    el.addEventListener("click", (e) => {
+      if (e.target.closest(".acts")) return;
+      store.activeId = el.dataset.id;
+      saveStore();
+      renderSidebar();
+      renderMessages();
+      $("side").classList.remove("open");
+    }));
+  host.querySelectorAll(".ren").forEach((b) =>
+    b.addEventListener("click", () => {
+      const c = store.conversations.find((x) => x.id === b.dataset.id);
+      const t = prompt("Nombre de la conversación:", c.title);
+      if (t && t.trim()) { c.title = t.trim().slice(0, 80); saveStore(); renderSidebar(); renderMessages(); }
+    }));
+  host.querySelectorAll(".del").forEach((b) =>
+    b.addEventListener("click", () => {
+      const c = store.conversations.find((x) => x.id === b.dataset.id);
+      if (!confirm(`¿Borrar la conversación "${c.title}"? No se puede deshacer.`)) return;
+      store.conversations = store.conversations.filter((x) => x.id !== c.id);
+      if (store.activeId === c.id) store.activeId = store.conversations[0] ? store.conversations[0].id : null;
+      saveStore();
+      renderSidebar();
+      renderMessages();
+    }));
+}
+
+function setHint(msg, type) {
+  const el = $("hint");
+  el.textContent = msg || "";
+  el.className = "hint" + (type ? " " + type : "");
+}
+
+/* ----------------------------------- envío ----------------------------------- */
+
+async function send() {
+  if (busy) return;
+  const c = activeConvo();
+  if (!c) { newConvo(); return send(); }
+  const text = $("input").value.trim();
+  if (!text && !pending.length) { setHint("Escribe algo o adjunta un archivo.", "err"); return; }
+
+  const docs = pending.filter((a) => a.text).map((a) => ({ name: a.name, text: a.text }));
+  const binarios = pending.filter((a) => a.data).map((a) => ({ name: a.name, mimeType: a.mimeType, data: a.data }));
+  const files = pending.map((a) => a.name);
+  const content = text || "(archivo adjunto)";
+
+  c.messages.push({ role: "user", content, files, docs, at: Date.now() });
+  if (c.messages.length === 1 || c.title === "Conversación nueva") {
+    c.title = (text || files[0] || "Conversación").replace(/\s+/g, " ").slice(0, 60);
+  }
+  c.updatedAt = Date.now();
+  pending = [];
+  renderChips();
+  $("input").value = "";
+  autoGrow();
+  saveStore();
+  renderSidebar();
+  renderMessages();
+  setHint("");
+
+  const previos = c.messages.slice(0, -1).slice(-TURNOS_MEMORIA)
+    .map((m) => ({ role: m.role, content: expand(m) }));
+  const actual = c.messages[c.messages.length - 1];
+
+  busy = true;
+  $("send").disabled = true;
+  const host = $("msgs");
+  const typing = document.createElement("div");
+  typing.className = "msg bot";
+  typing.innerHTML = `<span class="typing">Escribiendo<span>.</span><span>.</span><span>.</span></span>`;
+  host.appendChild(typing);
+  host.scrollTop = host.scrollHeight;
+
+  try {
+    const out = await callApi({ message: expand(actual), history: previos, attachments: binarios });
+    typing.remove();
+    if (out.reply) {
+      ocultarError();
+      c.messages.push({ role: "assistant", content: out.reply, at: Date.now() });
+      c.updatedAt = Date.now();
+      saveStore();
+      renderMessages();
+      renderSidebar();
+      setHint("");
+    } else {
+      renderMessages();
+      mostrarError(out.error, out.detalle);
+    }
+  } catch (e) {
+    typing.remove();
+    renderMessages();
+    mostrarError("Ocurrió un error inesperado al hablar con el asistente.", String((e && e.message) || e));
+  } finally {
+    busy = false;
+    $("send").disabled = false;
+    $("input").focus();
+  }
+}
+
+
+/* ------------------------- diagnóstico de la conexión ------------------------- */
+
+function ocultarError() {
+  $("errBox").hidden = true;
+}
+function mostrarError(titulo, detalle) {
+  setHint("");
+  $("errBox").hidden = false;
+  $("errTitle").textContent = titulo || "No se pudo obtener respuesta.";
+  const d = detalle || "";
+  $("errDetail").textContent = d;
+  $("errDetail").hidden = !d;
+  $("errCopy").hidden = !d;
+}
+function pistaDeEstado(status, raw) {
+  if (status === 404) {
+    return "El servidor no encontró /api/chat. Revisa en Vercel que el archivo api/chat.js esté en el repositorio y que el último despliegue haya terminado sin errores.";
+  }
+  if (status === 405) return "El servidor rechazó la petición (método no permitido).";
+  if (status === 401 || status === 403) {
+    return "El servidor pide autenticación. Puede ser la protección de despliegues de Vercel o que falte la clave GEMINI_API_KEY1 en las variables de entorno.";
+  }
+  if (status === 500 || status === 502) {
+    return "La función del servidor falló al ejecutarse. En Vercel: proyecto → Deployments → el último → Functions → /api/chat, y revisa el registro de errores.";
+  }
+  if (status === 503) return "El servicio está ocupado o hay un despliegue en curso. Espera un minuto y vuelve a intentar.";
+  if (status === 504) return "La función tardó demasiado y Vercel la cortó. Vuelve a intentar con una pregunta más corta.";
+  if (/^\s*</.test(String(raw))) {
+    const propio = (() => {
+      try { return new URL(API_URL || "/api/chat", location.href).origin === location.origin; }
+      catch (e) { return true; }
+    })();
+    if (!propio) {
+      return `El chat está llamando a ${API_URL}, que no es la dirección de tu asistente. Corrige API_URL al principio del archivo o abre esta página desde tu propio sitio.`;
+    }
+    return `El servidor devolvió una página web en vez de una respuesta del asistente (HTTP ${status}). Suele pasar cuando esta página no vive en tu sitio: revisa que la dirección sea la de tu dominio. Abajo está lo que devolvió.`;
+  }
+  return `El servidor respondió algo que el chat no entiende (HTTP ${status}). Abajo está lo que devolvió.`;
+}
+
+async function callApi(payload) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 90000);
+  try {
+    const destino = API_URL || "/api/chat";
+    const res = await fetch(destino, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: ctrl.signal,
+    });
+    const raw = await res.text();
+    let data = null;
+    try { data = JSON.parse(raw); } catch (e) { data = null; }
+    if (data && data.reply) return { reply: data.reply };
+    if (data && data.error) return { error: data.error, detalle: `HTTP ${res.status}` };
+    return {
+      error: pistaDeEstado(res.status, raw),
+      detalle: `Dirección llamada: ${res.url || API_URL || "/api/chat"}\nHTTP ${res.status} ${res.statusText || ""}\n\n${String(raw).slice(0, 400)}`,
+    };
+  } catch (e) {
+    if (e && e.name === "AbortError") {
+      return { error: "El servidor tardó más de 90 segundos y se canceló la consulta. Intenta otra vez, si se repite haz una pregunta más corta.", detalle: "" };
+    }
+    return {
+      error: "No se pudo conectar con el asistente. Revisa tu conexión a internet. Esta herramienta necesita estar publicada en el sitio (no funciona abriendo el archivo directo desde tu computadora).",
+      detalle: `Dirección llamada: ${API_URL || new URL("/api/chat", location.href).href}\n${String((e && e.message) || e)}`,
+    };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+$("errCopy").addEventListener("click", async () => {
+  const txt = $("errTitle").textContent + "\n\n" + $("errDetail").textContent;
+  try { await navigator.clipboard.writeText(txt); $("errCopy").textContent = "Copiado"; setTimeout(() => { $("errCopy").textContent = "Copiar detalles"; }, 1500); }
+  catch (e) { setHint("No se pudo copiar; selecciona el texto a mano.", "err"); }
+});
+$("errRetry").addEventListener("click", () => { ocultarError(); send(); });
+
+/* ---------------------------------- eventos ---------------------------------- */
+
+function autoGrow() {
+  const t = $("input");
+  t.style.height = "auto";
+  t.style.height = Math.min(t.scrollHeight, 160) + "px";
+}
+
+$("input").addEventListener("input", () => { autoGrow(); if (!$("errBox").hidden) ocultarError(); });
+$("input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+});
+$("send").addEventListener("click", send);
+$("newChat").addEventListener("click", () => { newConvo(); $("side").classList.remove("open"); });
+$("burger").addEventListener("click", () => $("side").classList.toggle("open"));
+$("renameBtn").addEventListener("click", () => {
+  const c = activeConvo();
+  if (!c) return;
+  const t = prompt("Nombre de la conversación:", c.title);
+  if (t && t.trim()) { c.title = t.trim().slice(0, 80); saveStore(); renderSidebar(); renderMessages(); }
+});
+$("exportBtn").addEventListener("click", () => {
+  const c = activeConvo();
+  if (!c || !c.messages.length) { setHint("No hay nada que exportar todavía.", "err"); return; }
+  const md = [`# ${c.title}`, "", `Exportado el ${new Date().toLocaleString("es-MX")}`, ""]
+    .concat(c.messages.map((m) => {
+      const quien = m.role === "user" ? "Tú" : "Asistente";
+      const adj = (m.files || []).length ? `\n\n_Adjuntos: ${m.files.join(", ")}_` : "";
+      return `## ${quien}\n\n${m.content}${adj}`;
+    })).join("\n\n");
+  const url = URL.createObjectURL(new Blob([md], { type: "text/markdown;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `conversacion-${c.title.replace(/[^\w\-]+/g, "-").slice(0, 40)}.md`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+});
+
+$("attach").addEventListener("change", (e) => {
+  void addFiles(e.target.files);
+  e.target.value = "";
+});
+["dragenter", "dragover"].forEach((ev) =>
+  $("msgs").addEventListener(ev, (e) => { e.preventDefault(); }));
+$("msgs").addEventListener("drop", (e) => {
+  e.preventDefault();
+  void addFiles(e.dataTransfer && e.dataTransfer.files);
+});
+
+/* ---------------------------------- arranque ---------------------------------- */
+
+if (location.protocol === "file:") {
+  setHint("Estás abriendo el archivo directo desde tu computadora: el asistente necesita estar publicado en el sitio para poder responder (usa la API del servidor).", "warn");
+}
+if (!activeConvo() && store.conversations[0]) store.activeId = store.conversations[0].id;
+renderSidebar();
+renderMessages();
+autoGrow();
+
+window.__fiscalOk = true;
+</script>
+</body>
+</html>
