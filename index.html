@@ -28,21 +28,21 @@
   }
   p.subtitle { color: #94a3b8; font-size: 0.88rem; margin-bottom: 2.25rem; }
 
-  /* --- Asistente en linea: se ve desde que entras --- */
-  .asistente { margin-bottom: 2rem; }
+  /* --- Asistente en linea y compacto: solo sus funciones, crece al usarlo --- */
+  .asistente { margin-bottom: 1.75rem; }
   .asistente iframe {
     width: 100%;
-    height: clamp(520px, 70vh, 660px);
-    border: 1px solid #2c3746;
-    border-radius: 16px;
-    background: #0f1826;
+    height: 96px;
+    border: none;
+    background: transparent;
     display: block;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+    transition: height 0.15s ease;
   }
   .asistente-nota {
-    font-size: 0.73rem;
+    font-size: 0.72rem;
     color: #64748b;
-    margin-top: 0.6rem;
+    margin-top: 0.5rem;
     line-height: 1.5;
   }
 
@@ -125,10 +125,11 @@
     <p class="subtitle">Pregunta directo o elige tu perfil para ver tus herramientas</p>
 
     <div class="asistente">
-      <iframe id="asistente" src="/chat.html" title="Asistente fiscal y contable"></iframe>
+      <iframe id="asistente" src="/chat.html?compacto=1" title="Asistente fiscal y contable"
+              scrolling="no"></iframe>
       <div class="asistente-nota">
-        Escribe tu duda o adjunta un archivo con el clip &#128206; (Excel, CSV, PDF, TXT o imagen)
-        y pregúntale lo que necesites. Nada se guarda: al recargar la página se borra.
+        Escribe tu duda o adjunta un archivo con el clip &#128206; (Excel, CSV, PDF, TXT o imagen).
+        Nada se guarda: al recargar se borra.
       </div>
     </div>
 
@@ -196,6 +197,16 @@
   </div>
 
   <script>
+    // El asistente avisa cuánto mide y aquí le ajustamos el alto, para que
+    // ocupe solo lo necesario y no tape las herramientas.
+    const marco = document.getElementById("asistente");
+    window.addEventListener("message", (e) => {
+      const d = e.data;
+      if (!d || d.tipo !== "asistente-alto" || typeof d.alto !== "number") return;
+      const tope = Math.round(window.innerHeight * 0.72);
+      marco.style.height = Math.max(88, Math.min(d.alto + 4, tope)) + "px";
+    });
+
     // Perfil: filtra el panel visible
     const pills = document.querySelectorAll(".profile-pill");
     const panels = document.querySelectorAll(".tools-panel");
