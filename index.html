@@ -28,7 +28,7 @@
   }
   p.subtitle { color: #94a3b8; font-size: 0.88rem; margin-bottom: 2.25rem; }
 
-  /* --- Asistente en linea y compacto: solo sus funciones, crece al usarlo --- */
+  /* --- Asistente en linea: chico al entrar, crece al usarlo --- */
   .asistente { margin-bottom: 1.75rem; }
   .asistente iframe {
     width: 100%;
@@ -198,25 +198,34 @@
 
   <script>
     const marco = document.getElementById("asistente");
+    let altoPrevio = 0;
+    let temporizador = null;
 
-    // Cuánto alto puede usar la conversación: así la respuesta se lee completa
-    // (con scroll dentro del cuadro) y las herramientas siguen a la vista.
-    function avisarTope() {
-      try {
-        marco.contentWindow.postMessage(
-          { tipo: "asistente-tope", px: Math.round(window.innerHeight * 0.62) }, "*");
-      } catch (e) { /* da igual */ }
-    }
-    marco.addEventListener("load", avisarTope);
-    window.addEventListener("resize", avisarTope);
-
-    // El asistente avisa cuánto mide y aquí le ajustamos el alto.
+    // El asistente avisa cuánto mide. Chico al entrar (las herramientas se ven
+    // completas); al usarlo crece todo lo necesario para leer las respuestas.
     window.addEventListener("message", (e) => {
       const d = e.data;
       if (!d || d.tipo !== "asistente-alto" || typeof d.alto !== "number") return;
-      const tope = Math.round(window.innerHeight * 0.72);
-      marco.style.height = Math.max(88, Math.min(d.alto + 4, tope)) + "px";
-      avisarTope();
+      const nuevo = Math.max(88, Math.ceil(d.alto) + 4);
+      if (nuevo === altoPrevio) return;
+      const creció = nuevo > altoPrevio;
+      altoPrevio = nuevo;
+      marco.style.height = nuevo + "px";
+
+      // Si creció (llegó una respuesta) y el asistente está a la vista,
+      // acompaña el scroll para que la respuesta se vea sin buscarla.
+      // Se espera a que termine la transición de alto; si no, se mide un
+      // tamaño que todavía no existe y el scroll no se mueve.
+      if (creció) {
+        clearTimeout(temporizador);
+        temporizador = setTimeout(() => {
+          const caja = marco.getBoundingClientRect();
+          const aLaVista = caja.top < window.innerHeight && caja.bottom > 0;
+          if (aLaVista && caja.bottom > window.innerHeight + 8) {
+            try { marco.scrollIntoView({ block: "end", behavior: "smooth" }); } catch (err) {}
+          }
+        }, 260);
+      }
     });
 
     // Perfil: filtra el panel visible
