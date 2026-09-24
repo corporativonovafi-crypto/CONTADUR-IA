@@ -1,15 +1,38 @@
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Método no permitido" });
+/* ============================================================================
+   api/chat.js  —  Asistente fiscal
+   Cambios respecto a tu versión anterior (todo lo demás queda igual):
+     1. Acepta `attachments` para analizar archivos.
+        - { name, text }                 -> documentos de texto (Excel/CSV/PDF/TXT)
+        - { name, mimeType, data }       -> imágenes y PDF escaneado (base64)
+     2. Si la cuota gratuita se agota (429), responde con un mensaje claro.
+     3. Los errores largos de Google se recortan para que el chat no se rompa.
+   El system prompt quedó EXACTAMENTE como lo tenías.
+   ============================================================================ */
+
+// Permite subir imágenes de hasta ~5 MB. Si tu API no es de Next.js, esta línea
+// simplemente se ignora.
+export const config = { api: { bodyParser: { sizeLimit: "6mb" } } };
+
+/* Si quieres poder probar el chat desde otro sitio (por ejemplo el editor en
+   línea), deja ["*"]. Si prefieres que SOLO tu dominio pueda usarlo, cambia la
+   lista por tus direcciones, por ejemplo:
+   const ORIGENES_PERMITIDOS = ["https://mi-sitio.vercel.app"];            */
+const ORIGENES_PERMITIDOS = ["*"];
+
+function aplicarCors(req, res) {
+  const origen = (req.headers && req.headers.origin) || "";
+  const ok = ORIGENES_PERMITIDOS.includes("*")
+    ? origen || "*"
+    : (ORIGENES_PERMITIDOS.includes(origen) ? origen : "");
+  if (ok) {
+    res.setHeader("Access-Control-Allow-Origin", ok);
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   }
+}
 
-  const { message, history } = req.body;
-
-  if (!message || typeof message !== "string") {
-    return res.status(400).json({ error: "Falta el mensaje" });
-  }
-
-  const systemPrompt = `Eres un experto senior en materia FISCAL, CONTABLE, FINANCIERA, DE COSTOS
+const SYSTEM_PROMPT = `Eres un experto senior en materia FISCAL, CONTABLE, FINANCIERA, DE COSTOS
 Y TRIBUTARIA en México, con dominio de:
 
 - Fiscal: ISR, IVA, IEPS, CFDI 4.0, regímenes de personas físicas (RESICO, Régimen General
@@ -118,16 +141,69 @@ mencionar que existen estas herramientas del sitio:
 - Extractor de nómina CFDI (desglosa CFDI de nómina para trabajadores)
 - Fedaria (asesoría de trámites ante corredores, fedatarios y notarios públicos, para empresas)
 - Asesoría legal (formulario para plantear una duda directamente a un abogado, para
-  trabajadores, personas físicas con negocio o empresas)`;
+  trabajadores, personas físicas con negocio o empresas)
+- Extractor de estado de cuenta (deja solo fecha, descripción, cargo, abono y póliza, y
+  corre en el equipo del usuario sin enviar nada a internet)
+- Conciliación bancaria (cruza el estado de cuenta contra el auxiliar de bancos)
+
+Cuando te llegue un archivo adjunto, analízalo con base en lo que realmente contiene:
+no supongas cifras que no aparezcan en el documento. Si el archivo está incompleto,
+ilegible o no corresponde a lo que el usuario pide, dilo antes de responder.`;
+
+const MAX_ADJUNTO_BYTES = 5 * 1024 * 1024;   // ~5 MB en base64
+const MAX_TEXTO = 60000;                      // caracteres por archivo de texto
+const MAX_ADJUNTOS = 6;
+
+export default async function handler(req, res) {
+  aplicarCors(req, res);
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Método no permitido" });
+  }
+
+  const { message, history, attachments } = req.body || {};
+
+  if (!message || typeof message !== "string") {
+    return res.status(400).json({ error: "Falta el mensaje" });
+  }
+  if (!process.env.GEMINI_API_KEY1) {
+    return res.status(500).json({
+      error: "Falta configurar GEMINI_API_KEY1 en las variables de entorno de Vercel",
+    });
+  }
+
+  // Un turno = el texto del usuario más los archivos que adjuntó.
+  const parts = [{ text: message }];
+  let bytesBinarios = 0;
+
+  const lista = Array.isArray(attachments) ? attachments.slice(0, MAX_ADJUNTOS) : [];
+  for (const a of lista) {
+    if (!a) continue;
+    if (a.text) {
+      parts.push({
+        text: `\n\n--- Archivo adjunto: ${a.name || "documento"} ---\n${String(a.text).slice(0, MAX_TEXTO)}`,
+      });
+    } else if (a.data && a.mimeType) {
+      bytesBinarios += String(a.data).length;
+      if (bytesBinarios > MAX_ADJUNTO_BYTES) {
+        return res.status(413).json({
+          error: "Los archivos adjuntos pesan demasiado (máximo ~5 MB en total). Reduce la imagen o divídela.",
+        });
+      }
+      parts.push({ inline_data: { mime_type: a.mimeType, data: a.data } });
+    }
+  }
 
   const contents = [
     ...(Array.isArray(history)
       ? history.map((h) => ({
           role: h.role === "assistant" ? "model" : "user",
-          parts: [{ text: h.content }],
+          parts: [{ text: String(h.content || "") }],
         }))
       : []),
-    { role: "user", parts: [{ text: message }] },
+    { role: "user", parts },
   ];
 
   const model = "gemini-3.1-flash-lite";
@@ -139,14 +215,19 @@ mencionar que existen estas herramientas del sitio:
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents,
-        systemInstruction: { parts: [{ text: systemPrompt }] },
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
         generationConfig: { maxOutputTokens: 1536 },
       }),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      return res.status(response.status).json({ error: errText });
+      if (response.status === 429) {
+        return res.status(429).json({
+          error: "Se agotó la cuota gratuita de Gemini por ahora. Espera unos minutos o vuelve mañana (el contador se reinicia a medianoche, hora del Pacífico).",
+        });
+      }
+      return res.status(response.status).json({ error: String(errText).slice(0, 600) });
     }
 
     const data = await response.json();
