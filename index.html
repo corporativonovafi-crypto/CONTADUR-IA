@@ -197,14 +197,26 @@
   </div>
 
   <script>
-    // El asistente avisa cuánto mide y aquí le ajustamos el alto, para que
-    // ocupe solo lo necesario y no tape las herramientas.
     const marco = document.getElementById("asistente");
+
+    // Cuánto alto puede usar la conversación: así la respuesta se lee completa
+    // (con scroll dentro del cuadro) y las herramientas siguen a la vista.
+    function avisarTope() {
+      try {
+        marco.contentWindow.postMessage(
+          { tipo: "asistente-tope", px: Math.round(window.innerHeight * 0.62) }, "*");
+      } catch (e) { /* da igual */ }
+    }
+    marco.addEventListener("load", avisarTope);
+    window.addEventListener("resize", avisarTope);
+
+    // El asistente avisa cuánto mide y aquí le ajustamos el alto.
     window.addEventListener("message", (e) => {
       const d = e.data;
       if (!d || d.tipo !== "asistente-alto" || typeof d.alto !== "number") return;
       const tope = Math.round(window.innerHeight * 0.72);
       marco.style.height = Math.max(88, Math.min(d.alto + 4, tope)) + "px";
+      avisarTope();
     });
 
     // Perfil: filtra el panel visible
