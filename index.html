@@ -28,7 +28,7 @@
   }
   p.subtitle { color: #94a3b8; font-size: 0.88rem; margin-bottom: 2.25rem; }
 
-  /* --- Hero AI input --- */
+  /* --- Cuadro principal: el asistente --- */
   .hero-ai { margin-bottom: 2.25rem; }
   .hero-ai-box {
     display: flex;
@@ -39,7 +39,10 @@
     border-radius: 999px;
     padding: 0.4rem 0.4rem 0.4rem 1.25rem;
     box-shadow: 0 4px 24px rgba(212, 175, 55, 0.08);
+    text-decoration: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
   }
+  .hero-ai-box:hover { border-color: #d4af37; background: #1e2a3b; }
   .hero-ai-icon { font-size: 1.1rem; }
   #hero-input {
     flex: 1;
@@ -49,6 +52,7 @@
     font-size: 0.95rem;
     padding: 0.6rem 0;
     outline: none;
+    font-family: inherit;
   }
   #hero-input::placeholder { color: #8b93a3; }
   #hero-send {
@@ -140,7 +144,7 @@
 
   footer { margin-top: 1.5rem; font-size: 0.75rem; color: #64748b; }
 
-  /* --- Chat widget --- */
+  /* --- Botón flotante: atajo al asistente --- */
   #chat-toggle {
     position: fixed;
     bottom: 1.5rem;
@@ -150,84 +154,13 @@
     border-radius: 50%;
     background: #d4af37;
     color: #1a1408;
-    border: none;
     font-size: 1.4rem;
-    cursor: pointer;
     box-shadow: 0 4px 14px rgba(0,0,0,0.35);
     z-index: 1000;
-  }
-  #chat-panel {
-    position: fixed;
-    bottom: 5.5rem;
-    right: 1.5rem;
-    width: 320px;
-    max-width: calc(100vw - 2rem);
-    height: 420px;
-    background: #0f172a;
-    border: 1px solid #334155;
-    border-radius: 14px;
-    display: none;
-    flex-direction: column;
-    overflow: hidden;
-    z-index: 1000;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.45);
-  }
-  #chat-panel.open { display: flex; }
-  #chat-header {
-    background: #1e293b;
-    color: #f1f5f9;
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    border-bottom: 1px solid #334155;
-  }
-  #chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.75rem;
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .msg {
-    max-width: 85%;
-    padding: 0.5rem 0.75rem;
-    border-radius: 10px;
-    font-size: 0.85rem;
-    line-height: 1.35;
-    white-space: pre-wrap;
-  }
-  .msg.user {
-    align-self: flex-end;
-    background: #d4af37;
-    color: #1a1408;
-  }
-  .msg.bot {
-    align-self: flex-start;
-    background: #1e293b;
-    color: #f1f5f9;
-    border: 1px solid #334155;
-  }
-  #chat-input-row {
-    display: flex;
-    border-top: 1px solid #334155;
-  }
-  #chat-input {
-    flex: 1;
-    border: none;
-    background: #1e293b;
-    color: #f1f5f9;
-    padding: 0.65rem 0.75rem;
-    font-size: 0.85rem;
-    outline: none;
-  }
-  #chat-send {
-    background: #d4af37;
-    color: #1a1408;
-    border: none;
-    padding: 0 1rem;
-    cursor: pointer;
-    font-size: 0.85rem;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
   }
 </style>
 </head>
@@ -237,12 +170,12 @@
     <p class="subtitle">Pregunta directo o elige tu perfil para ver tus herramientas</p>
 
     <div class="hero-ai">
-      <div class="hero-ai-box">
-        <span class="hero-ai-icon">✨</span>
+      <div class="hero-ai-box" id="hero-box">
+        <span class="hero-ai-icon" id="hero-icon" title="Abrir el asistente">✨</span>
         <input id="hero-input" type="text" placeholder="Pregúntale a la IA — fiscal, contable, financiero o legal..." />
-        <button id="hero-send" aria-label="Enviar">➤</button>
+        <button id="hero-send" aria-label="Preguntar">➤</button>
       </div>
-      <div class="hero-ai-caption">Responde con IA y te dirige a la herramienta correcta si aplica</div>
+      <div class="hero-ai-caption">Abre el asistente. Ahí puedes adjuntarle un archivo para que lo analice.</div>
     </div>
 
     <div class="profile-selector">
@@ -257,10 +190,6 @@
         <span class="name">💼 Extractor de nómina CFDI</span>
         <span class="desc">Extrae y desglosa tus CFDI de nómina para tu declaración</span>
       </a>
-      <a class="link-card" href="/chat.html">
-        <span class="name">💬 Asistente fiscal (con historial)</span>
-        <span class="desc">Pregunta lo que necesites y adjúntale archivos; las conversaciones se guardan solas</span>
-      </a>
     </div>
 
     <div class="tools-panel" data-panel="negocio">
@@ -271,10 +200,6 @@
       <a class="link-card" href="https://estimador-de-impuestos.vercel.app" target="_blank" rel="noopener">
         <span class="name">🧮 Estimador de impuestos</span>
         <span class="desc">Carga el resumen del Análisis XML y calcula tus impuestos aproximados, desglosados como PF RG o RESICO</span>
-      </a>
-      <a class="link-card" href="/chat.html">
-        <span class="name">💬 Asistente fiscal (con historial)</span>
-        <span class="desc">Pregunta lo que necesites y adjúntale archivos; las conversaciones se guardan solas</span>
       </a>
     </div>
 
@@ -294,10 +219,6 @@
       <a class="link-card" href="https://conciliador-bancario-flame.vercel.app/" target="_blank" rel="noopener">
         <span class="name">🔗 Conciliador bancario</span>
         <span class="desc">Cruza el estado de cuenta contra el auxiliar de bancos y te dice qué cuadra y qué no</span>
-      </a>
-      <a class="link-card" href="/chat.html">
-        <span class="name">💬 Asistente fiscal (con historial)</span>
-        <span class="desc">Pregunta lo que necesites y adjúntale archivos; las conversaciones se guardan solas</span>
       </a>
       <a class="link-card" href="https://hugh83409.softr.app/" target="_blank" rel="noopener">
         <span class="name">🏛️ Fedaria</span>
@@ -320,99 +241,42 @@
     </footer>
   </div>
 
-  <!-- Chat widget -->
-  <button id="chat-toggle" aria-label="Abrir chat fiscal">💬</button>
-  <div id="chat-panel">
-    <div id="chat-header">Asistente Fiscal y Contable</div>
-    <div id="chat-messages"></div>
-    <div id="chat-input-row">
-      <input id="chat-input" type="text" placeholder="Escribe tu duda..." />
-      <button id="chat-send">Enviar</button>
-    </div>
-  </div>
+  <!-- Atajo flotante: abre el mismo asistente -->
+  <a id="chat-toggle" href="/chat.html" aria-label="Abrir el asistente fiscal" title="Abrir el asistente">💬</a>
 
   <script>
-    const toggle = document.getElementById("chat-toggle");
-    const panel = document.getElementById("chat-panel");
-    const messagesEl = document.getElementById("chat-messages");
-    const input = document.getElementById("chat-input");
-    const sendBtn = document.getElementById("chat-send");
-
-    let history = [];
-
-    toggle.addEventListener("click", () => {
-      panel.classList.toggle("open");
-    });
-
-    function addMessage(text, role) {
-      const div = document.createElement("div");
-      div.className = "msg " + role;
-      div.textContent = text;
-      messagesEl.appendChild(div);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
-
-    async function sendMessage() {
-      const text = input.value.trim();
-      if (!text) return;
-      addMessage(text, "user");
-      input.value = "";
-
-      const thinkingEl = document.createElement("div");
-      thinkingEl.className = "msg bot";
-      thinkingEl.textContent = "Escribiendo...";
-      messagesEl.appendChild(thinkingEl);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-
-      try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: text, history }),
-        });
-        const data = await res.json();
-        thinkingEl.remove();
-
-        if (data.reply) {
-          addMessage(data.reply, "bot");
-          history.push({ role: "user", content: text });
-          history.push({ role: "assistant", content: data.reply });
-        } else {
-          addMessage("Error: " + (data.error || "respuesta vacía"), "bot");
-        }
-      } catch (err) {
-        thinkingEl.remove();
-        addMessage("No se pudo conectar con el asistente.", "bot");
-      }
-    }
-
-    sendBtn.addEventListener("click", sendMessage);
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") sendMessage();
-    });
-
-    // Hero input: opens the chat panel and forwards the first message
+    // El cuadro de arriba y el botón flotante llevan al asistente.
+    // Si escribiste algo, se manda ya escrito para no teclearlo dos veces.
     const heroInput = document.getElementById("hero-input");
     const heroSend = document.getElementById("hero-send");
+    const heroBox = document.getElementById("hero-box");
 
-    function launchFromHero() {
-      const text = heroInput.value.trim();
-      if (!text) {
-        panel.classList.add("open");
-        return;
-      }
-      panel.classList.add("open");
-      input.value = text;
-      heroInput.value = "";
-      sendMessage();
+    function irAlAsistente(texto) {
+      const t = (texto || "").trim();
+      window.location.href = t ? "/chat.html?q=" + encodeURIComponent(t) : "/chat.html";
     }
 
-    heroSend.addEventListener("click", launchFromHero);
-    heroInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") launchFromHero();
+    heroSend.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      irAlAsistente(heroInput.value);
     });
 
-    // Profile selector: filters visible tools panel
+    // Clic en el icono o en el borde del cuadro: abre el asistente.
+    // Clic dentro del campo: solo escribe (no navega, para que puedas teclear).
+    heroBox.addEventListener("click", (e) => {
+      if (e.target === heroInput || e.target === heroSend) return;
+      irAlAsistente(heroInput.value);
+    });
+
+    heroInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        irAlAsistente(heroInput.value);
+      }
+    });
+
+    // Perfil: filtra el panel visible
     const pills = document.querySelectorAll(".profile-pill");
     const panels = document.querySelectorAll(".tools-panel");
 
