@@ -1,11 +1,15 @@
 /* ============================================================================
    api/chat.js  —  Asistente fiscal
-   Cambios respecto a tu versión anterior (todo lo demás queda igual):
-     1. Acepta `attachments` para analizar archivos.
-        - { name, text }                 -> documentos de texto (Excel/CSV/PDF/TXT)
-        - { name, mimeType, data }       -> imágenes y PDF escaneado (base64)
-     2. Si la cuota gratuita se agota (429), responde con un mensaje claro.
-     3. Los errores largos de Google se recortan para que el chat no se rompa.
+
+   Reintentos y respaldo automático:
+     Si Google contesta 503 (modelo saturado) reintenta; si el modelo sigue sin
+     dar o ya no existe, prueba el siguiente de la lista MODELOS (abajo).
+     Así un pico de demanda de Google no se convierte en un error para el usuario.
+
+   Adjuntos:
+     - { name, text }            -> documentos de texto (Excel/CSV/PDF/TXT)
+     - { name, mimeType, data }  -> imágenes y PDF escaneado (base64)
+
    El system prompt quedó EXACTAMENTE como lo tenías.
    ============================================================================ */
 
@@ -150,11 +154,16 @@ Cuando te llegue un archivo adjunto, analízalo con base en lo que realmente con
 no supongas cifras que no aparezcan en el documento. Si el archivo está incompleto,
 ilegible o no corresponde a lo que el usuario pide, dilo antes de responder.`;
 
-/* Si Google satura un modelo, se prueba el siguiente de la lista.
-   Los tres son modelos "lite" estables y entran en el plan gratuito. */
-const MODELOS = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-2.5-flash-lite"];
-const MAX_INTENTOS = 3;           // intentos por modelo cuando esta saturado
-const ESPERAS = [1200, 3000];     // espera entre reintentos (ms)
+/* Lista de modelos, en orden de preferencia. Si el primero esta saturado o ya
+   no existe, se prueba el siguiente. Verificados contra la documentacion
+   oficial el 24-sep-2026 (https://ai.google.dev/gemini-api/docs/models).
+   Si algun dia Google retira uno, la respuesta de error te dira cual y podras
+   cambiarlo aqui sin tocar nada mas. */
+const MODELOS = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-3.8-flash"];
+const MAX_INTENTOS = 2;           // intentos por modelo antes de pasar al siguiente
+const ESPERAS = [1200, 2500];     // espera entre reintentos (ms)
+
+const recorte = (t) => String(t || "").replace(/\s+/g, " ").slice(0, 220);
 
 const MAX_ADJUNTO_BYTES = 5 * 1024 * 1024;   // ~5 MB en base64
 const MAX_TEXTO = 60000;                      // caracteres por archivo de texto
@@ -220,7 +229,7 @@ export default async function handler(req, res) {
 
   const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
   let ultimo = { status: 0, texto: "" };
-  let intentos = 0;
+  const probados = [];
 
   try {
     for (const modelo of MODELOS) {
@@ -228,7 +237,6 @@ export default async function handler(req, res) {
         `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${process.env.GEMINI_API_KEY1}`;
 
       for (let intento = 1; intento <= MAX_INTENTOS; intento++) {
-        intentos += 1;
         const response = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -245,7 +253,8 @@ export default async function handler(req, res) {
         }
 
         const errText = await response.text();
-        ultimo = { status: response.status, texto: String(errText) };
+        ultimo = { status: response.status, texto: String(errText), modelo };
+        probados.push(`${modelo}: HTTP ${response.status}`);
 
         // El modelo no existe o lo retiraron: pasar al siguiente de la lista.
         if (response.status === 404) break;
@@ -270,17 +279,36 @@ export default async function handler(req, res) {
       }
     }
 
+    const detalle = probados.join(", ");
+
     if (ultimo.status === 429) {
       return res.status(429).json({
-        error: "Se agotó la cuota gratuita de Gemini por ahora. Espera unos minutos o vuelve mañana; el contador se reinicia a medianoche, hora del Pacífico.",
+        error: "Se agotó la cuota gratuita de Gemini por ahora. Espera unos minutos o vuelve mañana; el contador se reinicia a medianoche, hora del Pacífico. (" + detalle + ")",
       });
     }
+
+    // 404: el modelo ya no existe o no está disponible para esta cuenta.
+    if (ultimo.status === 404) {
+      return res.status(503).json({
+        error: "Ninguno de los modelos configurados sirve para tu cuenta (" + MODELOS.join(", ") +
+          "). Google respondió: \"" + recorte(ultimo.texto) + "\". Solución: cambia la lista MODELOS " +
+          "al principio de api/chat.js por un modelo vigente; la lista oficial está en " +
+          "https://ai.google.dev/gemini-api/docs/models (probados: " + detalle + ")",
+      });
+    }
+
+    // 5xx: los servidores de Google están saturados.
     if (ultimo.status >= 500 || ultimo.status === 0) {
       return res.status(503).json({
-        error: `Los servidores de Google están saturados en este momento (HTTP ${ultimo.status || "sin respuesta"}). No es tu sitio ni tu código: es demanda temporal. Lo intenté ${intentos} veces con ${MODELOS.length} modelos. Espera unos segundos y dale a "Reintentar".`,
+        error: "Los servidores de Google están saturados en este momento (HTTP " + (ultimo.status || "sin respuesta") +
+          "). No es tu sitio ni tu código: es demanda temporal. Probé " + MODELOS.length +
+          " modelos (" + detalle + "). Espera unos segundos y dale a \"Reintentar\".",
       });
     }
-    return res.status(ultimo.status || 500).json({ error: String(ultimo.texto).slice(0, 600) });
+
+    return res.status(ultimo.status || 500).json({
+      error: "Gemini rechazó la consulta: " + recorte(ultimo.texto) + " (probados: " + detalle + ")",
+    });
   } catch (err) {
     return res.status(500).json({
       error: "Error llamando a la API de Gemini: " + String((err && err.message) || err).slice(0, 200),
