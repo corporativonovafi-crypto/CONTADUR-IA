@@ -126,7 +126,9 @@
   body.compacto .top,
   body.compacto .empty,
   body.compacto .nota { display: none; }
-  body.compacto .msgs { flex: none; max-height: 40vh; padding: 0 0 0.7rem; }
+  /* El alto disponible lo manda el menú (--alto-max). El respaldo de 320px
+     garantiza que la respuesta SIEMPRE se pueda leer, aunque el aviso no llegue. */
+  body.compacto .msgs { flex: none; max-height: var(--alto-max, 320px); padding: 0 0 0.7rem; }
   body.compacto .msg { max-width: 100%; }
   body.compacto .composer { border-top: none; background: transparent; padding: 0; }
   body.compacto .pie .hint { margin-top: 0; }
@@ -254,6 +256,14 @@ const TURNOS_MEMORIA = 10;        // mensajes previos que se mandan (solo en mem
    incrusta). Esconde el encabezado y los textos largos para no comerse la
    pantalla, y avisa al menú cuánto mide para que ajuste el alto. */
 const COMPACTO = new URLSearchParams(location.search).has("compacto");
+
+/* El menú nos dice cuánto alto hay disponible para la conversación. */
+window.addEventListener("message", (e) => {
+  const d = e.data;
+  if (!d || d.tipo !== "asistente-tope" || typeof d.px !== "number") return;
+  const px = Math.max(180, Math.min(d.px, 1400));
+  document.documentElement.style.setProperty("--alto-max", px + "px");
+});
 if (COMPACTO) document.body.classList.add("compacto");
 
 const $ = (id) => document.getElementById(id);
