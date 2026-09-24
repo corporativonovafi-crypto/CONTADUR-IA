@@ -113,6 +113,8 @@ mencionar que existen estas herramientas del sitio:
 - Análisis XML (analiza CFDI para personas físicas)
 - Estimador de impuestos (calcula ISR aproximado, PF RG o RESICO, a partir del análisis XML)
 - Auditor (audita XML para personas morales)
+- Generador de pólizas (genera pólizas contables en formato genérico compatible con
+  CONTPAQi, para empresas)
 - Extractor de nómina CFDI (desglosa CFDI de nómina para trabajadores)
 - Fedaria (asesoría de trámites ante corredores, fedatarios y notarios públicos, para empresas)
 - Asesoría legal (formulario para plantear una duda directamente a un abogado, para
