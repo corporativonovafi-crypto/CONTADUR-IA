@@ -43,7 +43,9 @@
     transition: border-color 0.15s ease, background 0.15s ease;
   }
   .hero-ai-box:hover { border-color: #d4af37; background: #1e2a3b; }
-  .hero-ai-icon { font-size: 1.1rem; }
+  .hero-ai-icon { font-size: 1.1rem; cursor: pointer; }
+  .hero-ai-box { cursor: pointer; }
+  #hero-input { cursor: text; }
   #hero-input {
     flex: 1;
     border: none;
@@ -143,25 +145,6 @@
   a.legal-banner .desc { font-size: 0.8rem; color: #e6d9a8; }
 
   footer { margin-top: 1.5rem; font-size: 0.75rem; color: #64748b; }
-
-  /* --- Botón flotante: atajo al asistente --- */
-  #chat-toggle {
-    position: fixed;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: #d4af37;
-    color: #1a1408;
-    font-size: 1.4rem;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-  }
 </style>
 </head>
 <body>
@@ -241,11 +224,8 @@
     </footer>
   </div>
 
-  <!-- Atajo flotante: abre el mismo asistente -->
-  <a id="chat-toggle" href="/chat.html" aria-label="Abrir el asistente fiscal" title="Abrir el asistente">💬</a>
-
   <script>
-    // El cuadro de arriba y el botón flotante llevan al asistente.
+    // El cuadro de arriba lleva al asistente.
     // Si escribiste algo, se manda ya escrito para no teclearlo dos veces.
     const heroInput = document.getElementById("hero-input");
     const heroSend = document.getElementById("hero-send");
