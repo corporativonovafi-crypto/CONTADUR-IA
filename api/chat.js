@@ -150,6 +150,12 @@ Cuando te llegue un archivo adjunto, analízalo con base en lo que realmente con
 no supongas cifras que no aparezcan en el documento. Si el archivo está incompleto,
 ilegible o no corresponde a lo que el usuario pide, dilo antes de responder.`;
 
+/* Si Google satura un modelo, se prueba el siguiente de la lista.
+   Los tres son modelos "lite" estables y entran en el plan gratuito. */
+const MODELOS = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-2.5-flash-lite"];
+const MAX_INTENTOS = 3;           // intentos por modelo cuando esta saturado
+const ESPERAS = [1200, 3000];     // espera entre reintentos (ms)
+
 const MAX_ADJUNTO_BYTES = 5 * 1024 * 1024;   // ~5 MB en base64
 const MAX_TEXTO = 60000;                      // caracteres por archivo de texto
 const MAX_ADJUNTOS = 6;
@@ -206,38 +212,78 @@ export default async function handler(req, res) {
     { role: "user", parts },
   ];
 
-  const model = "gemini-3.1-flash-lite";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY1}`;
+  const cuerpo = JSON.stringify({
+    contents,
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    generationConfig: { maxOutputTokens: 1536 },
+  });
+
+  const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+  let ultimo = { status: 0, texto: "" };
+  let intentos = 0;
 
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents,
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        generationConfig: { maxOutputTokens: 1536 },
-      }),
-    });
+    for (const modelo of MODELOS) {
+      const url =
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${process.env.GEMINI_API_KEY1}`;
 
-    if (!response.ok) {
-      const errText = await response.text();
-      if (response.status === 429) {
-        return res.status(429).json({
-          error: "Se agotó la cuota gratuita de Gemini por ahora. Espera unos minutos o vuelve mañana (el contador se reinicia a medianoche, hora del Pacífico).",
+      for (let intento = 1; intento <= MAX_INTENTOS; intento++) {
+        intentos += 1;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: cuerpo,
         });
+
+        if (response.ok) {
+          const data = await response.json();
+          const reply = data.candidates?.[0]?.content?.parts
+            ?.map((p) => p.text)
+            .filter(Boolean)
+            .join("\n");
+          return res.status(200).json({ reply: reply || "No obtuve respuesta, intenta de nuevo." });
+        }
+
+        const errText = await response.text();
+        ultimo = { status: response.status, texto: String(errText) };
+
+        // El modelo no existe o lo retiraron: pasar al siguiente de la lista.
+        if (response.status === 404) break;
+
+        // Cuota agotada: un reintento corto y luego el siguiente modelo.
+        if (response.status === 429) {
+          if (intento === 1) { await esperar(1500); continue; }
+          break;
+        }
+
+        // Saturación o falla temporal de Google: reintentar con espera.
+        if (response.status >= 500) {
+          if (intento < MAX_INTENTOS) {
+            await esperar(ESPERAS[Math.min(intento - 1, ESPERAS.length - 1)]);
+            continue;
+          }
+          break;
+        }
+
+        // Cualquier otro error (400, 403...) no se arregla reintentando.
+        return res.status(response.status).json({ error: String(errText).slice(0, 600) });
       }
-      return res.status(response.status).json({ error: String(errText).slice(0, 600) });
     }
 
-    const data = await response.json();
-    const reply = data.candidates?.[0]?.content?.parts
-      ?.map((p) => p.text)
-      .filter(Boolean)
-      .join("\n");
-
-    return res.status(200).json({ reply: reply || "No obtuve respuesta, intenta de nuevo." });
+    if (ultimo.status === 429) {
+      return res.status(429).json({
+        error: "Se agotó la cuota gratuita de Gemini por ahora. Espera unos minutos o vuelve mañana; el contador se reinicia a medianoche, hora del Pacífico.",
+      });
+    }
+    if (ultimo.status >= 500 || ultimo.status === 0) {
+      return res.status(503).json({
+        error: `Los servidores de Google están saturados en este momento (HTTP ${ultimo.status || "sin respuesta"}). No es tu sitio ni tu código: es demanda temporal. Lo intenté ${intentos} veces con ${MODELOS.length} modelos. Espera unos segundos y dale a "Reintentar".`,
+      });
+    }
+    return res.status(ultimo.status || 500).json({ error: String(ultimo.texto).slice(0, 600) });
   } catch (err) {
-    return res.status(500).json({ error: "Error llamando a la API de Gemini" });
+    return res.status(500).json({
+      error: "Error llamando a la API de Gemini: " + String((err && err.message) || err).slice(0, 200),
+    });
   }
 }
