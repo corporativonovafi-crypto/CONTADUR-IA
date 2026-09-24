@@ -28,51 +28,22 @@
   }
   p.subtitle { color: #94a3b8; font-size: 0.88rem; margin-bottom: 2.25rem; }
 
-  /* --- Cuadro principal: el asistente --- */
-  .hero-ai { margin-bottom: 2.25rem; }
-  .hero-ai-box {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    background: #17212f;
-    border: 1px solid #3a3120;
-    border-radius: 999px;
-    padding: 0.4rem 0.4rem 0.4rem 1.25rem;
-    box-shadow: 0 4px 24px rgba(212, 175, 55, 0.08);
-    text-decoration: none;
-    transition: border-color 0.15s ease, background 0.15s ease;
+  /* --- Asistente en linea: se ve desde que entras --- */
+  .asistente { margin-bottom: 2rem; }
+  .asistente iframe {
+    width: 100%;
+    height: clamp(520px, 70vh, 660px);
+    border: 1px solid #2c3746;
+    border-radius: 16px;
+    background: #0f1826;
+    display: block;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
   }
-  .hero-ai-box:hover { border-color: #d4af37; background: #1e2a3b; }
-  .hero-ai-icon { font-size: 1.1rem; cursor: pointer; }
-  .hero-ai-box { cursor: pointer; }
-  #hero-input { cursor: text; }
-  #hero-input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    color: #f1f5f9;
-    font-size: 0.95rem;
-    padding: 0.6rem 0;
-    outline: none;
-    font-family: inherit;
-  }
-  #hero-input::placeholder { color: #8b93a3; }
-  #hero-send {
-    background: #d4af37;
-    color: #1a1408;
-    border: none;
-    border-radius: 999px;
-    width: 40px;
-    height: 40px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .hero-ai-caption {
-    text-align: center;
-    font-size: 0.74rem;
+  .asistente-nota {
+    font-size: 0.73rem;
     color: #64748b;
     margin-top: 0.6rem;
+    line-height: 1.5;
   }
 
   /* --- Profile selector --- */
@@ -145,6 +116,7 @@
   a.legal-banner .desc { font-size: 0.8rem; color: #e6d9a8; }
 
   footer { margin-top: 1.5rem; font-size: 0.75rem; color: #64748b; }
+
 </style>
 </head>
 <body>
@@ -152,13 +124,12 @@
     <h1>Mis Herramientas Fiscales</h1>
     <p class="subtitle">Pregunta directo o elige tu perfil para ver tus herramientas</p>
 
-    <div class="hero-ai">
-      <div class="hero-ai-box" id="hero-box">
-        <span class="hero-ai-icon" id="hero-icon" title="Abrir el asistente">✨</span>
-        <input id="hero-input" type="text" placeholder="Pregúntale a la IA — fiscal, contable, financiero o legal..." />
-        <button id="hero-send" aria-label="Preguntar">➤</button>
+    <div class="asistente">
+      <iframe id="asistente" src="/chat.html" title="Asistente fiscal y contable"></iframe>
+      <div class="asistente-nota">
+        Escribe tu duda o adjunta un archivo con el clip &#128206; (Excel, CSV, PDF, TXT o imagen)
+        y pregúntale lo que necesites. Nada se guarda: al recargar la página se borra.
       </div>
-      <div class="hero-ai-caption">Abre el asistente. Ahí puedes adjuntarle un archivo para que lo analice.</div>
     </div>
 
     <div class="profile-selector">
@@ -225,37 +196,6 @@
   </div>
 
   <script>
-    // El cuadro de arriba lleva al asistente.
-    // Si escribiste algo, se manda ya escrito para no teclearlo dos veces.
-    const heroInput = document.getElementById("hero-input");
-    const heroSend = document.getElementById("hero-send");
-    const heroBox = document.getElementById("hero-box");
-
-    function irAlAsistente(texto) {
-      const t = (texto || "").trim();
-      window.location.href = t ? "/chat.html?q=" + encodeURIComponent(t) : "/chat.html";
-    }
-
-    heroSend.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      irAlAsistente(heroInput.value);
-    });
-
-    // Clic en el icono o en el borde del cuadro: abre el asistente.
-    // Clic dentro del campo: solo escribe (no navega, para que puedas teclear).
-    heroBox.addEventListener("click", (e) => {
-      if (e.target === heroInput || e.target === heroSend) return;
-      irAlAsistente(heroInput.value);
-    });
-
-    heroInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        irAlAsistente(heroInput.value);
-      }
-    });
-
     // Perfil: filtra el panel visible
     const pills = document.querySelectorAll(".profile-pill");
     const panels = document.querySelectorAll(".tools-panel");
