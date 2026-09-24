@@ -594,6 +594,18 @@ if (location.protocol === "file:") {
 renderMessages();
 autoGrow();
 
+/* Si vienes del menú con una pregunta en la dirección (chat.html?q=...), se
+   pregunta sola al abrir para que no la tengas que escribir dos veces. */
+(function () {
+  let q = "";
+  try { q = (new URLSearchParams(location.search).get("q") || "").trim(); } catch (e) { q = ""; }
+  if (!q) return;
+  try { history.replaceState(null, "", location.pathname); } catch (e) { /* da igual */ }
+  $("input").value = q;
+  autoGrow();
+  setTimeout(() => { void send(); }, 80);
+})();
+
 window.__fiscalOk = true;
 </script>
 </body>
