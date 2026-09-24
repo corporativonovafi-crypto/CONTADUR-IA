@@ -1,15 +1,12 @@
 /* ============================================================================
    api/chat.js  —  Asistente fiscal
-
-   Reintentos y respaldo automático:
-     Si Google contesta 503 (modelo saturado) reintenta; si el modelo sigue sin
-     dar o ya no existe, prueba el siguiente de la lista MODELOS (abajo).
-     Así un pico de demanda de Google no se convierte en un error para el usuario.
-
-   Adjuntos:
-     - { name, text }            -> documentos de texto (Excel/CSV/PDF/TXT)
-     - { name, mimeType, data }  -> imágenes y PDF escaneado (base64)
-
+   Cambios respecto a tu versión anterior (todo lo demás queda igual):
+     1. Acepta `attachments` para analizar archivos.
+        - { name, text }                 -> documentos de texto (Excel/CSV/PDF/TXT)
+        - { name, mimeType, data }       -> imágenes y PDF escaneado (base64)
+     2. Reintenta solo si Google está saturado y cambia de modelo.
+     3. Si abres esta dirección en el navegador (GET), te dice qué modelos acepta
+        tu llave. No expone la clave.
    El system prompt quedó EXACTAMENTE como lo tenías.
    ============================================================================ */
 
@@ -159,9 +156,15 @@ ilegible o no corresponde a lo que el usuario pide, dilo antes de responder.`;
    oficial el 24-sep-2026 (https://ai.google.dev/gemini-api/docs/models).
    Si algun dia Google retira uno, la respuesta de error te dira cual y podras
    cambiarlo aqui sin tocar nada mas. */
-const MODELOS = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-3.8-flash"];
+const MODELOS = [
+  "gemini-3.1-flash-lite",
+  "gemini-3.5-flash-lite",
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.6-flash",
+];
 const MAX_INTENTOS = 2;           // intentos por modelo antes de pasar al siguiente
-const ESPERAS = [1200, 2500];     // espera entre reintentos (ms)
+const ESPERAS = [1500, 4000];     // espera entre reintentos (ms)
 
 const recorte = (t) => String(t || "").replace(/\s+/g, " ").slice(0, 220);
 
@@ -174,6 +177,42 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") {
     return res.status(204).end();
   }
+  // DIAGNÓSTICO: abre esta misma dirección en el navegador (sin nada más) y te
+  // dice qué modelos acepta tu llave. No expone la clave.
+  if (req.method === "GET") {
+    if (!process.env.GEMINI_API_KEY1) {
+      return res.status(500).json({ error: "Falta configurar GEMINI_API_KEY1 en Vercel" });
+    }
+    try {
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY1}&pageSize=200`
+      );
+      const texto = await r.text();
+      if (!r.ok) return res.status(r.status).json({ error: String(texto).slice(0, 600) });
+      const data = JSON.parse(texto);
+      const modelos = (data.models || [])
+        .filter((m) => Array.isArray(m.supportedGenerationMethods) &&
+                       m.supportedGenerationMethods.includes("generateContent"))
+        .map((m) => String(m.name || "").replace("models/", ""));
+      const faltantes = MODELOS.filter((m) => !modelos.includes(m));
+      return res.status(200).json({
+        resumen:
+          "Tu llave puede usar estos modelos: " + modelos.join(", ") + ". " +
+          (faltantes.length
+            ? "OJO: de los que usa el asistente, NO están disponibles: " + faltantes.join(", ") +
+              ". Quita esos de la lista MODELOS en api/chat.js."
+            : "Los " + MODELOS.length + " modelos que usa el asistente SÍ están disponibles."),
+        los_que_usa_el_asistente: MODELOS,
+        disponibles_para_tu_llave: modelos,
+        no_disponibles: faltantes,
+      });
+    } catch (e) {
+      return res.status(500).json({
+        error: "No se pudo consultar la lista de modelos: " + String((e && e.message) || e),
+      });
+    }
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método no permitido" });
   }
