@@ -28,7 +28,7 @@
   }
   p.subtitle { color: #94a3b8; font-size: 0.88rem; margin-bottom: 2.25rem; }
 
-  /* --- Asistente en linea: chico al entrar, crece al usarlo --- */
+  /* --- Asistente en linea y compacto: solo sus funciones, crece al usarlo --- */
   .asistente { margin-bottom: 1.75rem; }
   .asistente iframe {
     width: 100%;
@@ -125,11 +125,14 @@
     <p class="subtitle">Pregunta directo o elige tu perfil para ver tus herramientas</p>
 
     <div class="asistente">
+      <!-- allow="microphone": sin esto, el dictado por voz NO funciona dentro del
+           iframe (el navegador lo bloquea aunque el usuario dé permiso). -->
       <iframe id="asistente" src="/chat.html?compacto=1" title="Asistente fiscal y contable"
-              scrolling="no"></iframe>
+              scrolling="no" allow="microphone; clipboard-write"></iframe>
       <div class="asistente-nota">
-        Escribe tu duda o adjunta un archivo con el clip &#128206; (Excel, CSV, PDF, TXT o imagen).
-        Nada se guarda: al recargar se borra.
+        Escribe tu duda, dictala con el micrófono &#127908; o adjunta un archivo con el clip
+        &#128206; (Excel, CSV, PDF, TXT o imagen). También puedes pegar una captura con
+        Ctrl+V o arrastrarla. Nada se guarda: al recargar se borra.
       </div>
     </div>
 
@@ -197,12 +200,13 @@
   </div>
 
   <script>
+    // El asistente avisa cuánto mide y aquí le ajustamos el alto, para que
+    // ocupe solo lo necesario y no tape las herramientas.
     const marco = document.getElementById("asistente");
     let altoPrevio = 0;
     let temporizador = null;
 
-    // El asistente avisa cuánto mide. Chico al entrar (las herramientas se ven
-    // completas); al usarlo crece todo lo necesario para leer las respuestas.
+
     window.addEventListener("message", (e) => {
       const d = e.data;
       if (!d || d.tipo !== "asistente-alto" || typeof d.alto !== "number") return;
