@@ -773,7 +773,7 @@ async function callApi(payload) {
                modelo: data.modelo, consultas: data.consultas || [],
                motivoBusqueda: data.motivoBusqueda || "" };
     }
-    if (data && data.error) return { error: data.error, detalle: `HTTP ${res.status}` };
+    if (data && data.error) return { error: data.error, detalle: data.detalle || `HTTP ${res.status}` };
     return {
       error: pistaDeEstado(res.status, raw),
       detalle: `Dirección llamada: ${res.url || API_URL || "/api/chat"}\nHTTP ${res.status} ${res.statusText || ""}\n\n${String(raw).slice(0, 400)}`,
@@ -1039,4 +1039,3 @@ window.__fiscalOk = true;
 </script>
 </body>
 </html>
-
