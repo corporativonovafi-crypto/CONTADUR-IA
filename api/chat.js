@@ -310,6 +310,23 @@ const MODELOS = [
   "gemini-3.6-flash",
   "gemini-3.1-flash-lite",
 ];
+/* Un 429 significa dos cosas muy distintas: cuota DIARIA agotada (hay que esperar al día
+   siguiente) o demasiadas peticiones por MINUTO (se recupera en segundos). El cuerpo del
+   error dice cuál es, así que se le dice al usuario exactamente qué pasó. */
+function explicar429(errText) {
+  const t = String(errText || "");
+  const porMinuto = /PerMinute|per minute|RPM/i.test(t) && !/PerDay|per day/i.test(t);
+  const seg = (t.match(/retryDelay"?\s*:\s*"?(\d+)(?:\.\d+)?s/i) || [])[1];
+  if (porMinuto) {
+    return "Se hicieron demasiadas preguntas en muy poco tiempo" +
+      (seg ? " (Google pide esperar " + seg + " segundos)" : "") +
+      ". Espera " + (seg ? seg + " segundos" : "un minuto") + " y vuelve a intentar.";
+  }
+  return "Se agotó la cuota gratuita de Gemini. El contador se reinicia a la medianoche " +
+         "del Pacífico, que en México es entre la 1 y las 2 de la madrugada. " +
+         "Si esto pasa durante el piloto, conviene activar la facturación de la API.";
+}
+
 const MAX_INTENTOS = 2;           // intentos por modelo antes de pasar al siguiente
 const ESPERAS = [1500, 4000];     // espera entre reintentos (ms)
 
@@ -507,11 +524,10 @@ export default async function handler(req, res) {
         // El modelo no existe o lo retiraron: pasar al siguiente de la lista.
         if (response.status === 404) break;
 
-        // Cuota agotada: un reintento corto y luego el siguiente modelo.
-        if (response.status === 429) {
-          if (intento === 1) { await esperar(1500); continue; }
-          break;
-        }
+        // Cuota agotada. NO se reintenta el mismo modelo: si la cuota es por modelo, el
+        // siguiente sí responde; y si es un límite por minuto, se reintenta una sola vez
+        // al final de la lista. Antes esto gastaba 10 llamadas por pregunta.
+        if (response.status === 429) break;
 
         // Saturación o falla temporal de Google: reintentar con espera.
         if (response.status >= 500) {
@@ -537,12 +553,38 @@ export default async function handler(req, res) {
       }
     }
 
-    const detalle = probados.join(", ");
+    // Última oportunidad: si los 429 eran por límite POR MINUTO, ya se liberó.
+    if (ultimo.status === 429) {
+      await esperar(5000);
+      const r2 = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${MODELOS[0]}:generateContent?key=${process.env.GEMINI_API_KEY1}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: cuerpoCon(VARIANTES_BUSQUEDA[0]),
+        }
+      );
+      if (r2.ok) {
+        const data = await r2.json();
+        const rastro = rastroDeBusqueda(data);
+        const reply = data.candidates?.[0]?.content?.parts?.map((p) => p.text).filter(Boolean).join("\n");
+        return res.status(200).json({
+          reply: reply || "No obtuve respuesta, intenta de nuevo.",
+          fuentes: rastro.fuentes,
+          consultas: rastro.consultas,
+          busqueda: true,
+          modelo: MODELOS[0],
+        });
+      }
+      ultimo = { status: r2.status, texto: await r2.text(), modelo: MODELOS[0] };
+    }
+
+    // El detalle completo queda en los registros de Vercel; al usuario se le da un
+    // mensaje claro y corto (los nombres de los modelos no le dicen nada).
+    console.log("[chat] falló todo:", probados.join(" | "));
 
     if (ultimo.status === 429) {
-      return res.status(429).json({
-        error: "Se agotó la cuota gratuita de Gemini por ahora. Espera unos minutos o vuelve mañana; el contador se reinicia a medianoche, hora del Pacífico. (" + detalle + ")",
-      });
+      return res.status(429).json({ error: explicar429(ultimo.texto) });
     }
 
     // 404: el modelo ya no existe o no está disponible para esta cuenta.
