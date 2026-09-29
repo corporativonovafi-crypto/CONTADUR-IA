@@ -1,4 +1,4 @@
-  /* ============================================================================
+/* ============================================================================
    api/chat.js  —  Asistente fiscal
    Cambios respecto a tu versión anterior (todo lo demás queda igual):
      1. Acepta `attachments` para analizar archivos.
@@ -342,18 +342,33 @@ const MODELOS = [
 /* Un 429 significa dos cosas muy distintas: cuota DIARIA agotada (hay que esperar al día
    siguiente) o demasiadas peticiones por MINUTO (se recupera en segundos). El cuerpo del
    error dice cuál es, así que se le dice al usuario exactamente qué pasó. */
+/* Devuelve dos textos: uno corto y neutral para el cliente, y el técnico para el dueño
+   (sale en el botón "Copiar detalles" y en los registros del servidor). */
 function explicar429(errText) {
   const t = String(errText || "");
   const porMinuto = /PerMinute|per minute|RPM/i.test(t) && !/PerDay|per day/i.test(t);
+  const porDia = /PerDay|per day|RPD|daily/i.test(t);
   const seg = (t.match(/retryDelay"?\s*:\s*"?(\d+)(?:\.\d+)?s/i) || [])[1];
-  if (porMinuto) {
-    return "Se hicieron demasiadas preguntas en muy poco tiempo" +
-      (seg ? " (Google pide esperar " + seg + " segundos)" : "") +
-      ". Espera " + (seg ? seg + " segundos" : "un minuto") + " y vuelve a intentar.";
+  const donde = "Consumo real: https://aistudio.google.com/rate-limit";
+  if (porMinuto || (!porDia && seg)) {
+    return {
+      corto: "El asistente recibió demasiadas preguntas seguidas. Espera un momento y vuelve a intentar.",
+      tecnico: "429 por límite POR MINUTO" + (seg ? " (Google pide esperar " + seg + " s)" : "") +
+               ". Se recupera solo en segundos. " + donde,
+    };
   }
-  return "Se agotó la cuota gratuita de Gemini. El contador se reinicia a la medianoche " +
-         "del Pacífico, que en México es entre la 1 y las 2 de la madrugada. " +
-         "Si esto pasa durante el piloto, conviene activar la facturación de la API.";
+  if (porDia) {
+    return {
+      corto: "El asistente no está disponible en este momento. Vuelve a intentar más tarde.",
+      tecnico: "429 por CUOTA DEL DÍA agotada. Se reinicia a la medianoche del Pacífico " +
+               "(entre la 1 y las 2 de la madrugada en México). " + donde,
+    };
+  }
+  return {
+    corto: "El asistente no está disponible en este momento. Vuelve a intentar en unos minutos.",
+    tecnico: "429 sin detalle de Google. Puede ser límite POR MINUTO (se recupera en segundos) " +
+             "o CUOTA DEL DÍA (se reinicia a la medianoche del Pacífico, 1-2 AM en México). " + donde,
+  };
 }
 
 /* ¿El error es DE ESE MODELO (conviene probar el siguiente de la lista) o es de la
@@ -367,6 +382,17 @@ function esErrorDelModelo(status, errText) {
 }
 
 const MAX_INTENTOS = 2;           // intentos por modelo antes de pasar al siguiente
+
+/* La búsqueda se prueba solo con los primeros modelos de la lista. Probar los cinco
+   gastaba 5 llamadas por pregunta en la capa gratuita, donde la búsqueda no existe (y
+   cada intento fallido consume cuota igual). Con dos basta: si el primero la rechaza,
+   el segundo la intenta, y si tampoco, se contesta sin ella. */
+const MODELOS_CON_BUSQUEDA = 2;
+
+/* Los 429 que reportó el usuario aparecieron en LOS CINCO modelos a la vez, así que el
+   límite es del proyecto, no del modelo: insistir con más modelos solo quema cuota.
+   Con dos respuestas 429 ya se sabe lo que pasa. */
+const MAX_429 = 2;
 const ESPERAS = [1500, 4000];     // espera entre reintentos (ms)
 
 const recorte = (t) => String(t || "").replace(/\s+/g, " ").slice(0, 220);
@@ -533,10 +559,15 @@ export default async function handler(req, res) {
        hay búsqueda: si cualquiera de la lista la soporta, se usa. */
     let iVar = varianteInicial();
     let algunRechazoDeHerramienta = false;
+    let rechazosHerramienta = 0;
+    let saltarModelos = false;
+    let cuenta429 = 0;
 
     buscar:
     for (; iVar < VARIANTES_BUSQUEDA.length; iVar++) {
       for (const modelo of MODELOS) {
+        if (saltarModelos) break;   // ya se vieron suficientes rechazos de la búsqueda
+
         const url =
           `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${process.env.GEMINI_API_KEY1}`;
 
@@ -577,7 +608,11 @@ export default async function handler(req, res) {
         // Cuota agotada. NO se reintenta el mismo modelo: si la cuota es por modelo, el
         // siguiente sí responde; y si es un límite por minuto, se reintenta una sola vez
         // al final de la lista. Antes esto gastaba 10 llamadas por pregunta.
-        if (response.status === 429) break;
+        if (response.status === 429) {
+          cuenta429++;
+          if (cuenta429 >= MAX_429) break buscar;   // es del proyecto: no se insiste más
+          break;                                    // se prueba el siguiente modelo
+        }
 
         // Saturación o falla temporal de Google: reintentar con espera.
         if (response.status >= 500) {
@@ -594,6 +629,8 @@ export default async function handler(req, res) {
         //  herramienta también dice "not supported" y se confundiría con un modelo caído)
         if (response.status === 400 && /tool|google_search|grounding|search/i.test(errText)) {
           algunRechazoDeHerramienta = true;
+          rechazosHerramienta++;
+          if (rechazosHerramienta >= MODELOS_CON_BUSQUEDA) saltarModelos = true;
           motivoSinBusqueda = String(errText);
           console.log("[chat] búsqueda rechazada por", modelo, ":", String(errText).slice(0, 300));
           probados.push(`${modelo}: no acepta búsqueda`);
@@ -604,6 +641,8 @@ export default async function handler(req, res) {
         // Si el problema es de ESE modelo (no existe, no está habilitado para la llave),
         // se prueba el siguiente de la lista en vez de tirar la petición completa.
         if (esErrorDelModelo(response.status, errText) && MODELOS.indexOf(modelo) < MODELOS.length - 1) {
+          console.log("[chat] modelo no disponible:", modelo, "HTTP", response.status, "->",
+                      String(errText).replace(/\s+/g, " ").slice(0, 200));
           probados.push(`${modelo}: HTTP ${response.status} (no disponible)`);
           ultimo = { status: response.status, texto: errText, modelo };
           break;
@@ -617,7 +656,10 @@ export default async function handler(req, res) {
       // Se terminó la pasada de esta variante. Si nadie aceptó la búsqueda y queda la
       // variante sin ella, se intenta; si el problema fue otro (cuota, modelo), se corta.
       if (!algunRechazoDeHerramienta || iVar === VARIANTES_BUSQUEDA.length - 1) break buscar;
+      // Se cambia de variante: se vuelven a recorrer TODOS los modelos desde cero.
       algunRechazoDeHerramienta = false;
+      rechazosHerramienta = 0;
+      saltarModelos = false;
     }
 
     // Última oportunidad: si los 429 eran por límite POR MINUTO, ya se liberó.
@@ -654,7 +696,12 @@ export default async function handler(req, res) {
     console.log("[chat] falló todo:", probados.join(" | "));
 
     if (ultimo.status === 429) {
-      return res.status(429).json({ error: explicar429(ultimo.texto) });
+      const m = explicar429(ultimo.texto);
+      // El motivo CRUDO de Google queda en los registros: es la única forma de saber si
+      // el 429 fue por cuota del día, por minuto o por capacidad del servicio.
+      console.log("[chat] 429 crudo:", String(ultimo.texto).replace(/\s+/g, " ").slice(0, 600));
+      console.log("[chat]", m.tecnico, "| probados:", probados.join(" | "));
+      return res.status(429).json({ error: m.corto, detalle: m.tecnico });
     }
 
     // Ningún modelo de la lista quedó disponible: hay que revisar la lista, no la llave.
