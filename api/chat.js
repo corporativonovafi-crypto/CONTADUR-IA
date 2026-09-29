@@ -342,6 +342,33 @@ const MODELOS = [
 /* Un 429 significa dos cosas muy distintas: cuota DIARIA agotada (hay que esperar al día
    siguiente) o demasiadas peticiones por MINUTO (se recupera en segundos). El cuerpo del
    error dice cuál es, así que se le dice al usuario exactamente qué pasó. */
+/* Saca lo importante del cuerpo del error de Google y lo deja en UNA línea legible.
+   Hace falta porque Vercel colapsa el JSON en los registros y no se alcanza a leer. */
+function datosDelError(t) {
+  const s = String(t || "");
+  const saca = (clave) => (s.match(new RegExp('"' + clave + '"\\s*:\\s*"([^"]+)"')) || [])[1] || "";
+  return {
+    status: saca("status") || saca("code"),
+    razon: saca("reason"),
+    cuota: saca("quotaId") || saca("quotaMetric"),
+    limite: saca("quotaValue"),
+    espera: saca("retryDelay"),
+    mensaje: saca("message").slice(0, 160),
+  };
+}
+
+function lineaDelError(t) {
+  const d = datosDelError(t);
+  return [
+    d.status && "status=" + d.status,
+    d.razon && "razon=" + d.razon,
+    d.cuota && "cuota=" + d.cuota.replace("generativelanguage.googleapis.com/", ""),
+    d.limite && "limite=" + d.limite,
+    d.espera && "esperar=" + d.espera,
+    d.mensaje && "msg=" + d.mensaje,
+  ].filter(Boolean).join(" · ") || "(cuerpo vacío)";
+}
+
 /* Devuelve dos textos: uno corto y neutral para el cliente, y el técnico para el dueño
    (sale en el botón "Copiar detalles" y en los registros del servidor). */
 function explicar429(errText) {
@@ -364,9 +391,20 @@ function explicar429(errText) {
                "(entre la 1 y las 2 de la madrugada en México). " + donde,
     };
   }
+  const d = datosDelError(t);
+  // Sin una cuota señalada, el 429 es saturación del servicio, no consumo del usuario.
+  if (!d.cuota && !porDia && !porMinuto) {
+    return {
+      corto: "El asistente está saturado en este momento. Vuelve a intentar en unos minutos.",
+      tecnico: "429 de CAPACIDAD: Google no reporta ninguna cuota excedida" +
+               (d.razon ? " (razon=" + d.razon + ")" : "") +
+               ". No es tu consumo. Se recupera solo; si es constante, activa la facturación " +
+               "para tener prioridad. " + donde,
+    };
+  }
   return {
     corto: "El asistente no está disponible en este momento. Vuelve a intentar en unos minutos.",
-    tecnico: "429 sin detalle de Google. Puede ser límite POR MINUTO (se recupera en segundos) " +
+    tecnico: "429 sin detalle suficiente. Puede ser límite POR MINUTO (se recupera en segundos) " +
              "o CUOTA DEL DÍA (se reinicia a la medianoche del Pacífico, 1-2 AM en México). " + donde,
   };
 }
@@ -664,7 +702,7 @@ export default async function handler(req, res) {
 
     // Última oportunidad: si los 429 eran por límite POR MINUTO, ya se liberó.
     if (ultimo.status === 429) {
-      await esperar(5000);
+      await esperar(2500);
       const r2 = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${MODELOS[0]}:generateContent?key=${process.env.GEMINI_API_KEY1}`,
         {
@@ -697,9 +735,10 @@ export default async function handler(req, res) {
 
     if (ultimo.status === 429) {
       const m = explicar429(ultimo.texto);
-      // El motivo CRUDO de Google queda en los registros: es la única forma de saber si
-      // el 429 fue por cuota del día, por minuto o por capacidad del servicio.
-      console.log("[chat] 429 crudo:", String(ultimo.texto).replace(/\s+/g, " ").slice(0, 600));
+      // El motivo queda en los registros en texto plano (Vercel colapsa el JSON crudo):
+      // es la única forma de saber si el 429 fue por cuota del día, por minuto o por
+      // capacidad del servicio.
+      console.log("[chat] 429 MOTIVO ->", lineaDelError(ultimo.texto));
       console.log("[chat]", m.tecnico, "| probados:", probados.join(" | "));
       return res.status(429).json({ error: m.corto, detalle: m.tecnico });
     }
