@@ -126,6 +126,25 @@
   .hint { font-size: 0.72rem; color: #7c8899; margin-top: 0.45rem; line-height: 1.5; }
   .hint.err { color: #fca5a5; }
   .hint.warn { color: #f0d48a; }
+  .fuentes { font-size: 0.7rem; color: #7c8899; margin-top: 0.55rem; line-height: 1.9; }
+  .fuentes .ft { color: #94a3b8; margin-right: 0.15rem; }
+  .fuentes a { color: #93b8d8; text-decoration: none; border: 1px solid #2c3746;
+               border-radius: 6px; padding: 0.1rem 0.45rem; margin-right: 0.3rem; display: inline-block; }
+  .fuentes a:hover { border-color: #d4af37; color: #f5e7b8; }
+
+  .nota.aviso {
+    margin-top: 0.7rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #6b5a20;
+    border-radius: 10px;
+    background: #221b10;
+    color: #e6d9a8;
+    font-size: 0.75rem;
+    line-height: 1.55;
+  }
+  .nota.aviso strong { color: #f5e7b8; }
+  .icon.reportar:hover { color: #f0b8a8; border-color: #6b3030; }
+
   .nota { font-size: 0.68rem; color: #5d6a7d; margin-top: 0.35rem; line-height: 1.5; }
   a { color: #d4af37; }
   .typing span { animation: blink 1.2s infinite; }
@@ -217,6 +236,11 @@
       micrófono &#127908;. Nada se guarda: esta conversación vive solo mientras la página esté abierta y
       se borra al recargar. Los archivos que adjuntes sí se envían al modelo para su análisis; el
       dictado lo convierte tu navegador.
+    </div>
+    <div class="nota aviso">
+      &#9888; <strong>Es una orientación técnica, no una asesoría formal.</strong> El asistente
+      <strong>consulta las leyes y las cifras oficiales por ti</strong> y te enseña las fuentes que usó.
+      Aun así, antes de presentar una declaración, <strong>revísalo con tu contador</strong>.
     </div>
   </div>
 </div>
@@ -549,10 +573,17 @@ function renderMessages() {
       ? `<div class="body">${esc(m.content)}</div>`
       : `<div class="body">${miniMarkdown(m.content)}</div>`;
     const tools = m.role === "assistant"
-      ? `<button class="icon copy" data-i="${i}" title="Copiar">&#128203;</button>` : "";
-    return `<div class="msg ${m.role === "user" ? "user" : "bot"}">${body}${files}
+      ? `<button class="icon reportar" data-i="${i}" title="Reportar una respuesta incorrecta">&#9888;</button>` +
+        `<button class="icon copy" data-i="${i}" title="Copiar">&#128203;</button>` : "";
+    const fuentes = (m.role === "assistant" && (m.fuentes || []).length)
+      ? `<div class="fuentes">&#128279; <span class="ft">Fuentes consultadas:</span> ` +
+        m.fuentes.map((f) => `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.titulo)}</a>`).join("") +
+        `</div>` : "";
+    return `<div class="msg ${m.role === "user" ? "user" : "bot"}">${body}${fuentes}${files}
       <div class="foot"><span>${esc(when)}</span>${tools}</div></div>`;
   }).join("");
+  host.querySelectorAll(".reportar").forEach((b) =>
+    b.addEventListener("click", () => reportar(Number(b.dataset.i))));
   host.querySelectorAll(".copy").forEach((b) =>
     b.addEventListener("click", async () => {
       try { await navigator.clipboard.writeText(mensajes[Number(b.dataset.i)].content); setHint("Respuesta copiada."); }
@@ -560,6 +591,38 @@ function renderMessages() {
     }));
   host.scrollTop = host.scrollHeight;
   actualizarPie();
+}
+
+/* Para el piloto: junta la pregunta con la respuesta en un solo texto y lo copia al
+   portapapeles, para que el tester lo pegue en WhatsApp y diga qué está mal.
+   No manda nada a ningún servidor: solo copia. */
+async function reportar(i) {
+  const m = mensajes[i] || {};
+  const pregunta = mensajes.slice(0, i).reverse().find((x) => x.role === "user");
+  const archivos = (pregunta && pregunta.files && pregunta.files.length)
+    ? pregunta.files.join(", ")
+    : (m.files || []).join(", ");
+  const txt = [
+    "REPORTE DEL ASISTENTE FISCAL",
+    "Fecha: " + new Date().toLocaleString("es-MX"),
+    archivos ? "Archivo adjunto: " + archivos : "",
+    "",
+    "PREGUNTA:",
+    pregunta ? pregunta.content : "(no encontrada)",
+    "",
+    "RESPUESTA DEL ASISTENTE:",
+    m.content || "",
+    (m.fuentes && m.fuentes.length)
+      ? "\nFUENTES QUE USO:\n" + m.fuentes.map((f) => "- " + f.titulo + " → " + f.url).join("\n") : "",
+    "",
+    "QUE ESTA MAL (escríbelo aquí antes de mandarlo):",
+  ].join("\n");
+  try {
+    await navigator.clipboard.writeText(txt);
+    setHint("Reporte copiado. Pégalo en un WhatsApp y agrégale qué está mal: así lo corrijo.", "warn");
+  } catch (e) {
+    setHint("No se pudo copiar automáticamente. Selecciona la respuesta y cópiala a mano.", "err");
+  }
 }
 
 function setHint(msg, type) {
@@ -617,7 +680,7 @@ async function send() {
     typing.remove();
     if (out.reply) {
       ocultarError();
-      mensajes.push({ role: "assistant", content: out.reply, at: Date.now() });
+      mensajes.push({ role: "assistant", content: out.reply, fuentes: out.fuentes || [], at: Date.now() });
       renderMessages();
       setHint("");
     } else {
@@ -689,7 +752,7 @@ async function callApi(payload) {
     const raw = await res.text();
     let data = null;
     try { data = JSON.parse(raw); } catch (e) { data = null; }
-    if (data && data.reply) return { reply: data.reply };
+    if (data && data.reply) return { reply: data.reply, fuentes: data.fuentes || [], busqueda: data.busqueda };
     if (data && data.error) return { error: data.error, detalle: `HTTP ${res.status}` };
     return {
       error: pistaDeEstado(res.status, raw),
