@@ -126,6 +126,8 @@
   .hint { font-size: 0.72rem; color: #7c8899; margin-top: 0.45rem; line-height: 1.5; }
   .hint.err { color: #fca5a5; }
   .hint.warn { color: #f0d48a; }
+  .diag { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.66rem;
+          color: #64748b; margin-top: 0.35rem; }
   .fuentes { font-size: 0.7rem; color: #7c8899; margin-top: 0.55rem; line-height: 1.9; }
   .fuentes .ft { color: #94a3b8; margin-right: 0.15rem; }
   .fuentes a { color: #93b8d8; text-decoration: none; border: 1px solid #2c3746;
@@ -579,7 +581,13 @@ function renderMessages() {
       ? `<div class="fuentes">&#128279; <span class="ft">Fuentes consultadas:</span> ` +
         m.fuentes.map((f) => `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.titulo)}</a>`).join("") +
         `</div>` : "";
-    return `<div class="msg ${m.role === "user" ? "user" : "bot"}">${body}${fuentes}${files}
+    const diag = (DIAGNOSTICO && m.role === "assistant" && m.modelo)
+      ? `<div class="diag">${esc(m.modelo)} · ` +
+        (m.busqueda
+          ? "con búsqueda (" + (m.consultas.length || 1) + " consulta(s))"
+          : "SIN búsqueda" + (m.motivoBusqueda ? " · " + esc(m.motivoBusqueda) : "")) +
+        `</div>` : "";
+    return `<div class="msg ${m.role === "user" ? "user" : "bot"}">${body}${fuentes}${diag}${files}
       <div class="foot"><span>${esc(when)}</span>${tools}</div></div>`;
   }).join("");
   host.querySelectorAll(".reportar").forEach((b) =>
@@ -624,6 +632,11 @@ async function reportar(i) {
     setHint("No se pudo copiar automáticamente. Selecciona la respuesta y cópiala a mano.", "err");
   }
 }
+
+/* Con ?diagnostico=1 al final de la dirección, cada respuesta muestra qué modelo la
+   contestó y si usó la búsqueda. Sirve para comprobar en vivo qué está pasando, sin
+   enseñarle datos internos al cliente. */
+const DIAGNOSTICO = new URLSearchParams(location.search).has("diagnostico");
 
 function setHint(msg, type) {
   const el = $("hint");
@@ -680,7 +693,10 @@ async function send() {
     typing.remove();
     if (out.reply) {
       ocultarError();
-      mensajes.push({ role: "assistant", content: out.reply, fuentes: out.fuentes || [], at: Date.now() });
+      mensajes.push({ role: "assistant", content: out.reply, fuentes: out.fuentes || [],
+                      modelo: out.modelo, busqueda: out.busqueda, consultas: out.consultas || [],
+                      motivoBusqueda: out.motivoBusqueda || "",
+                      at: Date.now() });
       renderMessages();
       setHint("");
     } else {
@@ -752,7 +768,11 @@ async function callApi(payload) {
     const raw = await res.text();
     let data = null;
     try { data = JSON.parse(raw); } catch (e) { data = null; }
-    if (data && data.reply) return { reply: data.reply, fuentes: data.fuentes || [], busqueda: data.busqueda };
+    if (data && data.reply) {
+      return { reply: data.reply, fuentes: data.fuentes || [], busqueda: data.busqueda,
+               modelo: data.modelo, consultas: data.consultas || [],
+               motivoBusqueda: data.motivoBusqueda || "" };
+    }
     if (data && data.error) return { error: data.error, detalle: `HTTP ${res.status}` };
     return {
       error: pistaDeEstado(res.status, raw),
@@ -1019,3 +1039,4 @@ window.__fiscalOk = true;
 </script>
 </body>
 </html>
+
