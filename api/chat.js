@@ -392,14 +392,24 @@ function explicar429(errText) {
     };
   }
   const d = datosDelError(t);
-  // Sin una cuota señalada, el 429 es saturación del servicio, no consumo del usuario.
-  if (!d.cuota && !porDia && !porMinuto) {
+  const diceCuota = /quota|billing|plan|exceeded/i.test(d.mensaje);
+  const diceSaturado = /overload|high demand|capacity|try again later|temporarily/i.test(d.mensaje);
+  // Se lee lo que Google dice en el mensaje, no se supone por los campos que falten.
+  if (diceCuota) {
+    return {
+      corto: "El asistente no está disponible en este momento. Vuelve a intentar más tarde.",
+      tecnico: "429: Google dice que se excedió una cuota (\"" + d.mensaje.slice(0, 120) + "\"). " +
+               (d.cuota ? "Cuota señalada: " + d.cuota + (d.limite ? " (límite " + d.limite + ")" : "") + ". "
+                        : "No dice cuál cuota. ") +
+               "Si tu consumo por modelo está lejos del límite, lo que el plan no permite es la " +
+               "HERRAMIENTA de búsqueda (en la capa gratuita aparece como 'Not available'). " + donde,
+    };
+  }
+  if (diceSaturado) {
     return {
       corto: "El asistente está saturado en este momento. Vuelve a intentar en unos minutos.",
-      tecnico: "429 de CAPACIDAD: Google no reporta ninguna cuota excedida" +
-               (d.razon ? " (razon=" + d.razon + ")" : "") +
-               ". No es tu consumo. Se recupera solo; si es constante, activa la facturación " +
-               "para tener prioridad. " + donde,
+      tecnico: "429 de CAPACIDAD: el servicio está saturado, no es tu consumo (" +
+               d.mensaje.slice(0, 120) + "). " + donde,
     };
   }
   return {
@@ -647,6 +657,15 @@ export default async function handler(req, res) {
         // siguiente sí responde; y si es un límite por minuto, se reintenta una sola vez
         // al final de la lista. Antes esto gastaba 10 llamadas por pregunta.
         if (response.status === 429) {
+          const hablaDeCuota = /quota|billing|plan|exceeded/i.test(datosDelError(errText).mensaje);
+          if (VARIANTES_BUSQUEDA[iVar].tools && hablaDeCuota && iVar < VARIANTES_BUSQUEDA.length - 1) {
+            console.log("[chat] 429 con la búsqueda puesta y Google habla de cuota:",
+                        "se reintenta SIN la herramienta (probablemente el plan no la incluye)");
+            motivoSinBusqueda = String(errText);
+            iVar++;
+            intento--;            // este intento no cuenta
+            continue;
+          }
           cuenta429++;
           if (cuenta429 >= MAX_429) break buscar;   // es del proyecto: no se insiste más
           break;                                    // se prueba el siguiente modelo
