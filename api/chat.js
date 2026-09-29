@@ -1,4 +1,4 @@
-/* ============================================================================
+  /* ============================================================================
    api/chat.js  —  Asistente fiscal
    Cambios respecto a tu versión anterior (todo lo demás queda igual):
      1. Acepta `attachments` para analizar archivos.
@@ -40,6 +40,35 @@ function aplicarCors(req, res) {
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   }
+}
+
+/* Qué variante de búsqueda funcionó la última vez. Vive en la memoria del proceso: con
+   una instancia tibia, las siguientes peticiones no vuelven a probar variantes que ese
+   servicio ya rechazó. Importa porque en la capa gratuita la búsqueda NO está disponible
+   por API (rechaza la herramienta) y cada intento fallido consume cuota igual.
+   Se olvida cada 30 minutos para que, si activas la facturación, la búsqueda vuelva sola. */
+let variantePreferida = 0;
+let varianteDesde = 0;
+let motivoSinBusqueda = "";   // por qué se está contestando sin búsqueda
+
+/* Traduce el rechazo de Google a algo que el usuario pueda entender y, sobre todo, que le
+   diga qué hacer. El texto original queda en los registros de Vercel. */
+function resumirMotivoBusqueda(t) {
+  if (/free tier|billing|quota|permission|not available/i.test(t)) {
+    return "tu proyecto no tiene la búsqueda habilitada: la capa gratuita de la API no la incluye";
+  }
+  if (/not supported|unsupported/i.test(t)) return "este modelo no acepta la búsqueda";
+  return String(t).replace(/\s+/g, " ").slice(0, 140);
+}
+
+function varianteInicial() {
+  if (Date.now() - varianteDesde > 30 * 60 * 1000) return 0;   // se vuelve a probar
+  return variantePreferida;
+}
+
+function recordarVariante(i) {
+  variantePreferida = i;
+  varianteDesde = Date.now();
 }
 
 function fechaHoy() {
@@ -327,6 +356,16 @@ function explicar429(errText) {
          "Si esto pasa durante el piloto, conviene activar la facturación de la API.";
 }
 
+/* ¿El error es DE ESE MODELO (conviene probar el siguiente de la lista) o es de la
+   llave/cuenta (insistir no sirve)? Antes, cualquier error raro tumbaba la petición
+   completa: un modelo no disponible para la llave dejaba sin servicio a los demás. */
+function esErrorDelModelo(status, errText) {
+  const t = String(errText || "");
+  if (/api[_ ]?key|billing|cuota del proyecto|PERMISSION_DENIED|expired|invalid key/i.test(t)) return false;
+  if (status === 404) return true;                       // el modelo no existe o no está habilitado
+  return /gemini-[0-9]|not supported|not found|does not exist|not available|unsupported|no such model/i.test(t);
+}
+
 const MAX_INTENTOS = 2;           // intentos por modelo antes de pasar al siguiente
 const ESPERAS = [1500, 4000];     // espera entre reintentos (ms)
 
@@ -443,9 +482,11 @@ export default async function handler(req, res) {
   /* Búsqueda real de Google. Los modelos Gemini 3 la soportan; si alguno de la lista no la
      acepta, se reintenta con la variante siguiente en vez de perder la respuesta.
      Se prueban dos nombres porque Google los ha ido cambiando entre versiones. */
+  /* La documentación de Google dice: "los modelos viejos usan google_search_retrieval;
+     para todos los modelos actuales usa google_search". Todos los de MODELOS son Gemini 3,
+     así que la variante vieja sobra y solo gastaba llamadas. */
   const VARIANTES_BUSQUEDA = [
     { id: "google_search", tools: [{ google_search: {} }] },
-    { id: "google_search_retrieval", tools: [{ google_search_retrieval: {} }] },
     { id: "sin_busqueda", tools: null },
   ];
   const cuerpoCon = (variante) => {
@@ -487,18 +528,24 @@ export default async function handler(req, res) {
   const probados = [];
 
   try {
-    for (const modelo of MODELOS) {
-      const url =
-        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${process.env.GEMINI_API_KEY1}`;
+    /* El orden de intentos importa: primero TODOS los modelos con búsqueda y, solo si
+       ninguno la acepta, se contesta sin ella. Así el orden de MODELOS ya no decide si
+       hay búsqueda: si cualquiera de la lista la soporta, se usa. */
+    let iVar = varianteInicial();
+    let algunRechazoDeHerramienta = false;
 
-      let iVar = 0;
+    buscar:
+    for (; iVar < VARIANTES_BUSQUEDA.length; iVar++) {
+      for (const modelo of MODELOS) {
+        const url =
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${process.env.GEMINI_API_KEY1}`;
 
-      for (let intento = 1; intento <= MAX_INTENTOS; intento++) {
-        const variante = VARIANTES_BUSQUEDA[iVar];
+        for (let intento = 1; intento <= MAX_INTENTOS; intento++) {
+
         const response = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: cuerpoCon(variante),
+          body: cuerpoCon(VARIANTES_BUSQUEDA[iVar]),
         });
 
         if (response.ok) {
@@ -508,11 +555,14 @@ export default async function handler(req, res) {
             .filter(Boolean)
             .join("\n");
           const rastro = rastroDeBusqueda(data);
+          recordarVariante(iVar);
+          if (VARIANTES_BUSQUEDA[iVar].tools) motivoSinBusqueda = "";
           return res.status(200).json({
             reply: reply || "No obtuve respuesta, intenta de nuevo.",
             fuentes: rastro.fuentes,
             consultas: rastro.consultas,
-            busqueda: !!variante.tools,
+            busqueda: !!VARIANTES_BUSQUEDA[iVar].tools,
+            motivoBusqueda: VARIANTES_BUSQUEDA[iVar].tools ? null : resumirMotivoBusqueda(motivoSinBusqueda),
             modelo,
           });
         }
@@ -538,19 +588,36 @@ export default async function handler(req, res) {
           break;
         }
 
-        // El modelo no acepta la herramienta de búsqueda: se cambia de variante y se
-        // reintenta el MISMO modelo (este intento no cuenta como gastado).
-        if (response.status === 400 && /tool|google_search|grounding|search/i.test(errText)
-            && iVar < VARIANTES_BUSQUEDA.length - 1) {
-          iVar++;
-          probados.push(`${modelo}: sin ${VARIANTES_BUSQUEDA[iVar].id}`);
-          intento--;
-          continue;
+        // Este modelo no acepta la búsqueda: se prueba el SIGUIENTE modelo con búsqueda
+        // (quizá sí la soporte). Solo si ninguno la acepta se contesta sin ella.
+        // (va antes de la revisión de "modelo no disponible": el mensaje de rechazo de la
+        //  herramienta también dice "not supported" y se confundiría con un modelo caído)
+        if (response.status === 400 && /tool|google_search|grounding|search/i.test(errText)) {
+          algunRechazoDeHerramienta = true;
+          motivoSinBusqueda = String(errText);
+          console.log("[chat] búsqueda rechazada por", modelo, ":", String(errText).slice(0, 300));
+          probados.push(`${modelo}: no acepta búsqueda`);
+          ultimo = { status: 400, texto: errText, modelo };
+          break;
         }
 
-        // Cualquier otro error (400, 403...) no se arregla reintentando.
+        // Si el problema es de ESE modelo (no existe, no está habilitado para la llave),
+        // se prueba el siguiente de la lista en vez de tirar la petición completa.
+        if (esErrorDelModelo(response.status, errText) && MODELOS.indexOf(modelo) < MODELOS.length - 1) {
+          probados.push(`${modelo}: HTTP ${response.status} (no disponible)`);
+          ultimo = { status: response.status, texto: errText, modelo };
+          break;
+        }
+
+        // Errores de la llave o de la cuenta (401, 403, 402) no se arreglan reintentando.
         return res.status(response.status).json({ error: String(errText).slice(0, 600) });
       }
+    }
+
+      // Se terminó la pasada de esta variante. Si nadie aceptó la búsqueda y queda la
+      // variante sin ella, se intenta; si el problema fue otro (cuota, modelo), se corta.
+      if (!algunRechazoDeHerramienta || iVar === VARIANTES_BUSQUEDA.length - 1) break buscar;
+      algunRechazoDeHerramienta = false;
     }
 
     // Última oportunidad: si los 429 eran por límite POR MINUTO, ya se liberó.
@@ -561,18 +628,21 @@ export default async function handler(req, res) {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: cuerpoCon(VARIANTES_BUSQUEDA[0]),
+          body: cuerpoCon(VARIANTES_BUSQUEDA[varianteInicial()]),
         }
       );
       if (r2.ok) {
         const data = await r2.json();
         const rastro = rastroDeBusqueda(data);
+        recordarVariante(0);
         const reply = data.candidates?.[0]?.content?.parts?.map((p) => p.text).filter(Boolean).join("\n");
+        motivoSinBusqueda = "";
         return res.status(200).json({
           reply: reply || "No obtuve respuesta, intenta de nuevo.",
           fuentes: rastro.fuentes,
           consultas: rastro.consultas,
           busqueda: true,
+          motivoBusqueda: null,
           modelo: MODELOS[0],
         });
       }
@@ -585,6 +655,14 @@ export default async function handler(req, res) {
 
     if (ultimo.status === 429) {
       return res.status(429).json({ error: explicar429(ultimo.texto) });
+    }
+
+    // Ningún modelo de la lista quedó disponible: hay que revisar la lista, no la llave.
+    if ([400, 403, 404].includes(ultimo.status) && esErrorDelModelo(ultimo.status, ultimo.texto)) {
+      return res.status(503).json({
+        error: "Ninguno de los modelos configurados está disponible para esta llave. " +
+               "Revisa la lista de MODELOS en api/chat.js o el acceso de tu proyecto en Google AI Studio.",
+      });
     }
 
     // 404: el modelo ya no existe o no está disponible para esta cuenta.
