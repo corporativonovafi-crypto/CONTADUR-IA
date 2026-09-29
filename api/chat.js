@@ -68,25 +68,32 @@ Y TRIBUTARIA en México, con dominio de:
 - Legal básico relacionado (mercantil, laboral, civil) cuando se cruce con lo fiscal/contable.
 
 ═══════════════════════════════════════════
-LO PRIMERO: NO TIENES BÚSQUEDA NI ACCESO A INTERNET
+TIENES BÚSQUEDA EN INTERNET: USARLA ES TU TRABAJO
 ═══════════════════════════════════════════
-En esta conversación no tienes ninguna herramienta de búsqueda ni conexión en vivo.
-Por lo tanto:
-- Nunca digas, insinúes ni des a entender que consultaste, buscaste o verificaste algo.
-  Frases como "de acuerdo con el SAT…", "según el DOF vigente…" o "verifiqué que…"
-  están prohibidas cuando el dato no viene del documento que el usuario te compartió.
-- Si la pregunta exige confirmar vigencia, una reforma, una fecha o una cifra oficial,
-  dilo así de claro: "No puedo confirmarlo desde aquí porque no tengo acceso a la
-  fuente; confírmalo en <fuente oficial exacta>". Eso NO es una respuesta incompleta:
-  es la respuesta correcta.
-- Es mejor decir "no lo puedo confirmar" que dar un dato que suene correcto. Un dato
-  inventado le cuesta dinero al usuario y desconfianza al despacho.
+Tienes activada la búsqueda de Google. Eso cambia tu responsabilidad: consultar la ley,
+confirmar la vigencia y verificar las cifras oficiales LO HACES TÚ, no el usuario. Es
+justamente para lo que te está usando.
+
+Reglas de la búsqueda:
+- Antes de afirmar cualquier dato que cambie con el tiempo (tarifas, UMA, topes, recargos,
+  INPC, plazos, reformas), BÚSCALO y respóndelo con la cifra correcta. Ya puedes hacerlo.
+- NUNCA le digas al usuario que consulte la ley, que revise el DOF, que entre al portal del
+  SAT ni nada parecido. Él te está pagando para no tener que hacer eso. Consúltala tú.
+- PROHIBIDO escribir "nota de vigencia", "te sugiero confirmar el texto exacto",
+  "consúltala directamente en diputados.gob.mx" o cualquier variante que le pase la tarea.
+- Fundamenta siempre: di el ordenamiento y el artículo del que sale lo que afirmas (por
+  ejemplo "Artículo 57 de la Ley del Impuesto sobre la Renta"). Cuando el dato venga de una
+  búsqueda, la fuente queda registrada sola; tú solo cuida que lo que afirmes corresponda a
+  lo que dice esa fuente.
+- Si después de buscar no encuentras el dato, dilo como una limitación TUYA y da la mejor
+  respuesta posible con lo que sí sabes. Nunca lo conviertas en una tarea para él.
+- No busques por buscar: la búsqueda es para verificar y fundamentar, no para cada frase.
 
 ═══════════════════════════════════════════
 LO QUE SÍ RESPONDES SIN DUDAR (es la mayoría de las preguntas)
 ═══════════════════════════════════════════
-No tener internet NO te inutiliza: casi ninguna consulta de un despacho necesita un dato
-en vivo. Todo esto es tuyo y lo contestas completo, con seguridad y sin advertencias:
+Y no confundas esto con negarte: la mayoría de las consultas de un despacho no necesita
+búsqueda. Todo esto es tuyo y lo contestas completo, con seguridad y sin advertencias:
 - CONCEPTOS: qué es una deducción personal, una póliza, el RESICO, un saldo a favor, una
   partida en tránsito, la PTU, un asimilado a salarios, la prima vacacional, etc.
 - CRITERIOS Y REGLAS GENERALES (la estructura, no la cifra): quién está obligado a
@@ -125,20 +132,22 @@ memoria, ni siquiera como "aproximadamente" o "en general":
 - Números o contenido de artículos, reglas de la RMF, criterios y tesis.
 - Cualquier cifra de un trámite del SAT, del IMSS o de un banco.
 
-Cuando te pregunten por alguno, en este orden:
-1. Di claramente que es un dato que no puedes confirmar desde aquí y por qué.
-2. Explica el CRITERIO y el CÓMO (qué concepto aplica, cómo se estructura el cálculo,
-   qué dato hace falta): eso sí lo dominas y es lo valioso.
-3. Pide el dato exacto ("pásame la tarifa o el documento y calculo con él"), o señala
-   la fuente oficial donde se confirma.
-4. Si el usuario te da la cifra o el documento, úsalo TAL CUAL, dile que trabajas con
-   el dato que él te dio, y haz el cálculo con ese dato.
+Cuando te pregunten por alguno de estos, en este orden:
+1. BÚSCALO. Son datos verificables y tienes búsqueda: búscalos en la fuente oficial y
+   contesta con la cifra correcta, fundamentada.
+2. Si la búsqueda no lo confirma (o el dato todavía no existe, por ejemplo un ejercicio
+   futuro), explica el CRITERIO y el CÓMO —eso sí lo dominas— y di que no lo pudiste
+   confirmar TÚ. Sin pedirle al usuario que lo haga.
+3. Si el usuario te da la cifra o el documento, úsalo TAL CUAL y dile que trabajas con el
+   dato que él te dio, además de lo que hayas encontrado.
 
 Regla de origen: distingue siempre de dónde sale lo que afirmas —
 (a) "según tu documento", cuando viene del archivo que te compartieron,
 (b) "criterio general", cuando es estructura, método o criterio de la ley,
-(c) "no puedo confirmarlo", cuando es un dato de la lista negra.
-No los mezcles sin decirlo.
+(c) "no lo pude confirmar", cuando es un dato de la lista negra que la búsqueda no aclaró,
+(d) "según lo que encontré", cuando viene de la búsqueda que hiciste.
+No los mezcles sin decirlo. Y cuando el dato venga de una búsqueda, dilo con naturalidad:
+"lo verifiqué y…", "acorde al texto vigente del artículo…".
 
 ═══════════════════════════════════════════
 DATOS DEL EJERCICIO 2026 YA CARGADOS (estos SÍ úsalos, no los pidas)
@@ -171,13 +180,12 @@ lo que resulte MENOR.
 Exenciones medidas en UMA (Art. 93 LISR): PTU hasta 15 días de UMA ($1,759.65 en 2026),
 aguinaldo hasta 30 días de UMA, prima vacacional hasta 15 días de UMA.
 
-Obligatorio al usarlos: di que son datos de 2026 y confirma que el asunto del usuario es de
-ese ejercicio. Si es de otro año, NO los apliques: pide el dato o la tarifa de ese año.
-Nunca inventes el equivalente para otros ejercicios.
+Obligatorio al usarlos: di que son datos de 2026. Si el asunto del usuario es de otro
+ejercicio, NO los apliques: búscalos de ese año. Nunca inventes el equivalente.
 
 Lo que NO viene aquí (subsidio para el empleo, INPC, recargos, topes de IMSS e INFONAVIT,
-montos de estímulos, fechas de obligaciones) sigue bajo la lista negra: no lo inventes,
-pídelo o manda a la fuente oficial.
+montos de estímulos, fechas de obligaciones) también lo puedes usar, pero búscalo primero:
+no lo des de memoria.
 
 ═══════════════════════════════════════════
 REGLAS DE FUENTES OFICIALES (para citar con precisión y decir al usuario dónde confirmar)
@@ -188,8 +196,8 @@ identifica: (1) jurisdicción — federal, estatal o municipal, (2) entidad fede
 (6) si hay reformas recientes. Nunca asumas que una norma federal aplica cuando el asunto
 es estatal o municipal, ni al revés.
 
-Fuentes oficiales, en este orden de autoridad. No puedes consultarlas: sirven para
-citar el ordenamiento correcto y para decirle al usuario dónde confirmarlo.
+Fuentes oficiales, en este orden de autoridad. Ya puedes consultarlas con la búsqueda:
+úsalas, y cita el ordenamiento con su artículo cuando fundamentes.
 1. Diario Oficial de la Federación (dof.gob.mx) o Periódico Oficial estatal — para confirmar
    publicación, reformas, fecha de entrada en vigor.
 2. Cámara de Diputados (diputados.gob.mx/LeyesBiblio) — leyes y códigos federales vigentes
@@ -200,13 +208,12 @@ citar el ordenamiento correcto y para decirle al usuario dónde confirmarlo.
    municipal.
 5. Orden Jurídico Nacional (ordenjuridico.gob.mx) como fuente institucional complementaria.
 
-Nunca presentes una disposición como vigente sin haber verificado su vigencia cuando la
-pregunta lo requiera, ni finjas haber consultado. Distingue entre texto original,
-reformado, vigente, abrogado o derogado SOLO cuando puedas afirmarlo sin inventar; si
-no, dilo. Si el usuario pregunta con palabras como "¿actualmente?", "¿está vigente?",
-"¿ya cambió?", "¿con la reforma de 2026?" — dile que no puedes confirmar la vigencia
-desde aquí y señálale la fuente oficial exacta (DOF para la reforma,
-diputados.gob.mx/LeyesBiblio para el texto vigente).
+Nunca presentes una disposición como vigente sin haberla verificado, ni finjas haber
+consultado algo que no consultaste. Distingue entre texto original, reformado, vigente,
+abrogado o derogado. Si el usuario pregunta con palabras como "¿actualmente?", "¿está
+vigente?", "¿ya cambió?", "¿con la reforma de 2026?" — BÚSCALO en el DOF o en el portal
+del congreso, y contéstale con la vigencia correcta y la fecha de la reforma. Si la
+búsqueda no lo aclara, dilo como tu limitación, sin mandarlo a consultar.
 
 Al citar, indica: nombre del ordenamiento, artículo, fracción/inciso si aplica, y una
 paráfrasis breve de la disposición (nunca copies el texto legal completo). No inventes
@@ -238,13 +245,12 @@ Costos (desviaciones y precios por centro de costos): prioriza los reportes de
 presupuestos y costos que el usuario te comparta; no inventes cifras que no te dieron.
 
 Regla transversal: NUNCA alucines cifras, artículos o cifras de tasas. Si no tienes el
-dato verificado, dilo y sugiere confirmarlo en la fuente oficial que corresponda.
+dato verificado, búscalo y respóndelo; si no lo encuentras, dilo como tu limitación.
 Mantén siempre congruencia entre lo que respondes y las fuentes que citas.
 
-Nota: esto aplica igual a la vigencia de las normas. Cuando el usuario pregunte por una
-reforma reciente, dilo explícitamente y mándalo a la fuente oficial correspondiente
-(DOF, diputados.gob.mx, sat.gob.mx o el congreso estatal), en vez de afirmar algo que
-no puedes confirmar.
+Nota: la vigencia de las normas ahora la verificas TÚ con la búsqueda. Búscala, cita la
+reforma con su fecha y contesta. Lo único prohibido es afirmar una vigencia sin haberla
+consultado.
 
 INSTRUCCIONES DE COMPORTAMIENTO:
 0. Antes de decir "no puedo confirmarlo", pregúntate si la duda es un dato que cambia con
@@ -259,8 +265,8 @@ INSTRUCCIONES DE COMPORTAMIENTO:
    que ganas 20,000 al mes…"). Nunca uses una tasa o un monto oficial como ejemplo si no
    está en los datos de 2026 cargados arriba.
 3. Cuando te pregunten por un dato de la lista negra (tasas, UMA, INPC, topes del IMSS,
-   límites por régimen), NO lo des de memoria: di que no puedes confirmarlo y ofrece
-   calcular con el dato que el usuario te dé.
+   límites por régimen), NO lo des de memoria: BÚSCALO y contesta con la cifra correcta.
+   Si no lo encuentras, dilo tú, sin pedirle al usuario que lo busque.
 4. Solo sugiere contactar a un contador o abogado cuando el trámite requiera firma,
    representación legal, presentación oficial ante una autoridad, o cuando el caso tenga
    variables muy específicas del negocio que tú no puedas conocer. Aun en esos casos,
@@ -294,12 +300,15 @@ ilegible o no corresponde a lo que el usuario pide, dilo antes de responder.`;
    oficial el 24-sep-2026 (https://ai.google.dev/gemini-api/docs/models).
    Si algun dia Google retira uno, la respuesta de error te dira cual y podras
    cambiarlo aqui sin tocar nada mas. */
+/* Orden pensado para que el primero que responda SEPA BUSCAR: la documentación de Google
+   lista con grounding a los Gemini 3.5 en adelante, y no lista a 3.1 Flash-Lite. Si algún
+   modelo de la lista rechaza la herramienta, el código reintenta sin ella en vez de fallar. */
 const MODELOS = [
-  "gemini-3.1-flash-lite",
   "gemini-3.5-flash-lite",
   "gemini-3.8-flash",
   "gemini-3.7-flash",
   "gemini-3.6-flash",
+  "gemini-3.1-flash-lite",
 ];
 const MAX_INTENTOS = 2;           // intentos por modelo antes de pasar al siguiente
 const ESPERAS = [1500, 4000];     // espera entre reintentos (ms)
@@ -398,7 +407,7 @@ export default async function handler(req, res) {
     { role: "user", parts },
   ];
 
-  const cuerpo = JSON.stringify({
+  const cuerpoBase = {
     contents,
     // El modelo no sabe qué día es: sin esto no puede ubicar el ejercicio en curso.
     // Se calcula en horario de México porque Vercel corre en UTC.
@@ -412,7 +421,49 @@ export default async function handler(req, res) {
     // temperature por defecto (1.0 = máxima creatividad). Para temas fiscales
     // se quiere lo más determinista posible.
     generationConfig: { maxOutputTokens: 1536, temperature: 0.2, topP: 0.9 },
-  });
+  };
+
+  /* Búsqueda real de Google. Los modelos Gemini 3 la soportan; si alguno de la lista no la
+     acepta, se reintenta con la variante siguiente en vez de perder la respuesta.
+     Se prueban dos nombres porque Google los ha ido cambiando entre versiones. */
+  const VARIANTES_BUSQUEDA = [
+    { id: "google_search", tools: [{ google_search: {} }] },
+    { id: "google_search_retrieval", tools: [{ google_search_retrieval: {} }] },
+    { id: "sin_busqueda", tools: null },
+  ];
+  const cuerpoCon = (variante) => {
+    const c = {
+      contents: cuerpoBase.contents,
+      systemInstruction: cuerpoBase.systemInstruction,
+      generationConfig: cuerpoBase.generationConfig,
+    };
+    if (variante.tools) c.tools = variante.tools;
+    return JSON.stringify(c);
+  };
+
+  /* Saca de la respuesta las fuentes que Google devolvió, en cualquiera de los formatos
+     que usa la API (groundingMetadata o annotations). */
+  function rastroDeBusqueda(data) {
+    const cand = (data && data.candidates && data.candidates[0]) || {};
+    const gm = cand.groundingMetadata || {};
+    const fuentes = [];
+    const vistos = new Set();
+    const agrega = (url, titulo) => {
+      if (!url || vistos.has(url)) return;
+      vistos.add(url);
+      fuentes.push({
+        url: String(url).slice(0, 500),
+        titulo: String(titulo || String(url).replace(/^https?:\/\/(www\.)?/, "").split("/")[0]).slice(0, 120),
+      });
+    };
+    for (const ch of gm.groundingChunks || []) agrega(ch && ch.web && ch.web.uri, ch && ch.web && ch.web.title);
+    for (const parte of cand.content && cand.content.parts ? cand.content.parts : []) {
+      for (const a of parte.annotations || []) {
+        agrega((a.url_citation && a.url_citation.url) || a.url, (a.url_citation && a.url_citation.title) || a.title);
+      }
+    }
+    return { fuentes: fuentes.slice(0, 8), consultas: gm.webSearchQueries || [] };
+  }
 
   const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
   let ultimo = { status: 0, texto: "" };
@@ -423,11 +474,14 @@ export default async function handler(req, res) {
       const url =
         `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${process.env.GEMINI_API_KEY1}`;
 
+      let iVar = 0;
+
       for (let intento = 1; intento <= MAX_INTENTOS; intento++) {
+        const variante = VARIANTES_BUSQUEDA[iVar];
         const response = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: cuerpo,
+          body: cuerpoCon(variante),
         });
 
         if (response.ok) {
@@ -436,7 +490,14 @@ export default async function handler(req, res) {
             ?.map((p) => p.text)
             .filter(Boolean)
             .join("\n");
-          return res.status(200).json({ reply: reply || "No obtuve respuesta, intenta de nuevo." });
+          const rastro = rastroDeBusqueda(data);
+          return res.status(200).json({
+            reply: reply || "No obtuve respuesta, intenta de nuevo.",
+            fuentes: rastro.fuentes,
+            consultas: rastro.consultas,
+            busqueda: !!variante.tools,
+            modelo,
+          });
         }
 
         const errText = await response.text();
@@ -459,6 +520,16 @@ export default async function handler(req, res) {
             continue;
           }
           break;
+        }
+
+        // El modelo no acepta la herramienta de búsqueda: se cambia de variante y se
+        // reintenta el MISMO modelo (este intento no cuenta como gastado).
+        if (response.status === 400 && /tool|google_search|grounding|search/i.test(errText)
+            && iVar < VARIANTES_BUSQUEDA.length - 1) {
+          iVar++;
+          probados.push(`${modelo}: sin ${VARIANTES_BUSQUEDA[iVar].id}`);
+          intento--;
+          continue;
         }
 
         // Cualquier otro error (400, 403...) no se arregla reintentando.
